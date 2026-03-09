@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Gaegu:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-hand: "Patrick Hand", "Gaegu", cursive;
+}
+
+body {
+  background-color: #f8bbd0; /* Light pink background like the reference */
+  font-family: var(--font-hand);
+  color: #000;
+}
+
+/* Hand-drawn border effect */
+.doodle-border {
+  border: 3px solid #000;
+  border-radius: 4px;
+}
+
+.doodle-shadow {
+  box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+}
+
+.doodle-shadow-sm {
+  box-shadow: 2px 2px 0px 0px rgba(0,0,0,1);
+}
+
+.doodle-button {
+  @apply doodle-border doodle-shadow bg-white px-4 py-2 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all;
+}
+
+.doodle-panel {
+  @apply doodle-border bg-[#cfd8dc] p-4; /* Blue-grey panel background */
+}
+
+.doodle-input {
+  @apply doodle-border bg-white px-3 py-1 outline-none focus:ring-2 focus:ring-pink-300;
+}
+
+/* Custom scrollbar for that retro feel */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #cfd8dc;
+  border-left: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #fff;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0px 0px rgba(0,0,0,1);
+}
