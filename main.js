@@ -18,7 +18,7 @@ const widgets = [
     },
     {
         id: 'collage-studio',
-        title: 'STITCHER STUDIO',
+        title: '圖片拼圖 多併一小幫手',
         description: '圖片拼接小幫手，輕鬆整理多張變一大張的JPG。',
         image: '/card-collage.png',
         path: './collage-studio/index.html',
