@@ -1,9 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Gaegu:wght@400;700&display=swap');
 @import "tailwindcss";
+/* 1. 先定義這些自定義工具 */
+@utility doodle-border {
+  border: 2px solid black;
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+}
+
+@utility doodle-shadow {
+  box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+}
+
+
 
 @theme {
   --font-hand: "Patrick Hand", "Gaegu", cursive;
 }
+
+
+
 
 body {
   background-color: #f8bbd0; /* Light pink background like the reference */
