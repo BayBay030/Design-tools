@@ -30,6 +30,8 @@
         "diy-pattern-generator/**/*.ts",
         "diy-pattern-generator/**/*.tsx",
         "image-ultra-resizer/**/*.ts",
-        "image-ultra-resizer/**/*.tsx"
+        "image-ultra-resizer/**/*.tsx",
+        "collage-studio/**/*.ts",
+        "collage-studio/**/*.tsx"
     ]
 }
