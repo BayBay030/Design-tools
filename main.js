@@ -24,11 +24,34 @@ const widgets = [
         path: './collage-studio/index.html',
     },
     {
+        id: 'present-helper',
+        title: '設計師提案小幫手',
+        description: '快速排列作品圖、加浮水印、調間距，產出好看的提案版面。',
+        image: '/card-present.png',
+        icon: '🖼️',
+        path: './present-helper/index.html',
+    },
+    {
+        id: 'instalayout-planner',
+        title: 'IG 預覽排版小幫手',
+        description: '規劃與預覽你的 Instagram 貼文排版。',
+        image: '/card-ig.png',
+        icon: '📱',
+        path: './instalayout-planner/index.html',
+    },
+    {
+        id: 'gif-maker',
+        title: 'gif maker',
+        description: '把圖片快速做成 gif 動圖。',
+        image: '/card-gif.png',
+        path: './gif-maker/index.html',
+    },
+    {
         id: 'coming-soon',
         title: '即將推出...',
         description: '更多有趣的小工具正在開發中，敬請期待！',
-        image: null,       // null = show emoji placeholder
-        icon: '✨',
+        image: '/comming.gif',
+        icon: '✨', // unused when image is provided
         path: '#',
     },
 ];

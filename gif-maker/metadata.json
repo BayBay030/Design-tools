@@ -1,0 +1,6 @@
+{
+  "name": "GIF生產機 (GIF Maker)",
+  "description": "上傳 PNG 圖片並快速生成可自定義速度的 GIF 動畫。",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

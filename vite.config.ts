@@ -9,6 +9,12 @@ export default defineConfig({
         port: 3000,
         open: true,
     },
+    resolve: {
+        dedupe: ['react', 'react-dom'],
+        alias: {
+            '@': path.resolve(__dirname, '.'),
+        },
+    },
     build: {
         rollupOptions: {
             input: {
@@ -18,12 +24,10 @@ export default defineConfig({
                 patternGenerator: path.resolve(__dirname, 'diy-pattern-generator/index.html'),
                 imageResizer: path.resolve(__dirname, 'image-ultra-resizer/index.html'),
                 collageStudio: path.resolve(__dirname, 'collage-studio/index.html'),
+                presentHelper: path.resolve(__dirname, 'present-helper/index.html'),
+                instaLayoutPlanner: path.resolve(__dirname, 'instalayout-planner/index.html'),
+                gifMaker: path.resolve(__dirname, 'gif-maker/index.html'),
             },
-        },
-    },
-    resolve: {
-        alias: {
-            '@': path.resolve(__dirname, '.'),
         },
     },
 });

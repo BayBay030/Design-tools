@@ -60,6 +60,27 @@ body {
     gap: 28px;
 }
 
+/* ── Intro / SEO copy ── */
+.tools-intro {
+    max-width: 1100px;
+    margin: 0 auto 22px;
+}
+
+.tools-intro-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.tools-intro-text {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
 /* ── Tool Card ── */
 .tool-card {
     background: var(--card-bg);
@@ -140,6 +161,27 @@ body {
     gap: 10px;
 }
 
+/* Special styling: "coming soon" card should be borderless and transparent */
+#tool-coming-soon {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#tool-coming-soon:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: transparent;
+}
+
+#tool-coming-soon .tool-card-body {
+    padding-top: 16px;
+}
+
+#tool-coming-soon .tool-card-cta {
+    display: none;
+}
+
 /* ──────────────────────────────────────
    FOOTER
 ────────────────────────────────────── */
@@ -164,6 +206,16 @@ body {
 .footer-author {
     display: flex;
     align-items: center;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.footer-meta {
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    opacity: 0.95;
 }
 
 .footer-ig {
@@ -178,7 +230,24 @@ body {
     opacity: 0.85;
 }
 
+.footer-email {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--footer-text);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: color 0.2s, opacity 0.2s;
+    opacity: 0.85;
+}
+
 .footer-ig:hover {
+    color: #ffffff;
+    opacity: 1;
+}
+
+.footer-email:hover {
     color: #ffffff;
     opacity: 1;
 }
@@ -186,6 +255,12 @@ body {
 .ig-icon {
     width: 20px;
     height: 20px;
+    flex-shrink: 0;
+}
+
+.email-icon {
+    width: 18px;
+    height: 18px;
     flex-shrink: 0;
 }
 
@@ -200,6 +275,10 @@ body {
 
     .tools-section {
         padding: 40px 24px 56px;
+    }
+
+    .tools-intro-title {
+        font-size: 1.25rem;
     }
 }
 

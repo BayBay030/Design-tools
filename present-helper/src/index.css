@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+@theme {
+  --font-pixel: "MS Gothic", monospace;
+  --color-retro-bg: #d5cedd;
+  --color-retro-window: #F5F3F7;
+  --color-retro-title: #997eaf;
+  --color-retro-border-light: #E8E8E8;
+  --color-retro-border-dark: #86868B;
+  --color-retro-outline: #1D1D1F;
+}
+
+@layer components {
+  .retro-window {
+    background-color: var(--color-retro-window);
+    border: 2px solid var(--color-retro-outline);
+    box-shadow:
+      inset 2px 2px 0 0 var(--color-retro-border-light),
+      inset -2px -2px 0 0 var(--color-retro-border-dark);
+  }
+
+  .retro-title-bar {
+    background: linear-gradient(90deg, #997eaf 0%, #d799d7 100%);
+    color: #FFFFFF;
+    padding: 4px 8px;
+    font-family: var(--font-pixel);
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--color-retro-outline);
+  }
+
+  .retro-title-bar button:hover {
+    animation: wiggle 0.3s ease-in-out infinite;
+    filter: brightness(1.2);
+  }
+
+  .retro-title-bar button:last-child:hover {
+    background-color: #ff5f57 !important;
+    color: white !important;
+    animation: shake 0.2s ease-in-out infinite;
+  }
+
+  @keyframes wiggle {
+
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+
+    25% {
+      transform: rotate(5deg);
+    }
+
+    75% {
+      transform: rotate(-5deg);
+    }
+  }
+
+  @keyframes shake {
+
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+
+    25% {
+      transform: translate(1px, 1px);
+    }
+
+    75% {
+      transform: translate(-1px, -1px);
+    }
+  }
+
+  .retro-button {
+    background-color: var(--color-retro-window);
+    border: 2px solid var(--color-retro-outline);
+    padding: 4px 12px;
+    font-family: var(--font-pixel);
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.1s;
+    position: relative;
+    box-shadow:
+      inset 1.5px 1.5px 0 0 var(--color-retro-border-light),
+      inset -1.5px -1.5px 0 0 var(--color-retro-border-dark);
+  }
+
+  .retro-button:hover:not(:disabled) {
+    background-color: #e0d8e8;
+    box-shadow:
+      inset 2px 2px 0 0 var(--color-retro-border-light),
+      inset -2px -2px 0 0 var(--color-retro-border-dark),
+      4px 4px 0 0 rgba(0, 0, 0, 0.1);
+    transform: translate(-1px, -1px);
+  }
+
+  .retro-button:active {
+    box-shadow:
+      inset 1.5px 1.5px 0 0 var(--color-retro-border-dark),
+      inset -1.5px -1.5px 0 0 var(--color-retro-border-light);
+    transform: translate(1px, 1px);
+  }
+
+  .retro-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .retro-inset {
+    background-color: white;
+    border: 2px solid var(--color-retro-outline);
+    box-shadow:
+      inset 1.5px 1.5px 0 0 var(--color-retro-border-dark),
+      inset -1.5px -1.5px 0 0 var(--color-retro-border-light);
+  }
+
+  .retro-start-button:hover {
+    animation: rainbow 1s linear infinite;
+    transform: scale(1.05) translate(-1px, -1px);
+  }
+
+  @keyframes rainbow {
+    0% {
+      filter: hue-rotate(0deg);
+    }
+
+    100% {
+      filter: hue-rotate(360deg);
+    }
+  }
+
+  .pixel-cloud {
+    position: absolute;
+    width: 60px;
+    height: 30px;
+    background: white;
+    box-shadow:
+      10px 0 0 0 rgb(214, 194, 221),
+      -10px 0 0 0 white,
+      0 10px 0 0 white,
+      0 -10px 0 0 white,
+      10px 10px 0 0 white,
+      -10px 10px 0 0 white,
+      10px -10px 0 0 white,
+      -10px -10px 0 0 white;
+    opacity: 0.6;
+    pointer-events: auto;
+    cursor: help;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .pixel-cloud:hover {
+    opacity: 1;
+    transform: scale(1.5) rotate(5deg);
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 16px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #ffffff;
+  border-left: 1px solid #6d6274;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #F5F3F7;
+  border: 2px solid;
+  border-color: #FFFFFF #4A4A4A #4A4A4A #FFFFFF;
+}
