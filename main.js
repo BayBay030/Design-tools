@@ -47,6 +47,21 @@ const widgets = [
         path: './gif-maker/index.html',
     },
     {
+        id: 'lyric-animator',
+        title: '歌詞動畫產生器',
+        description: '匯入音檔與歌詞，即時預覽多種字幕動畫效果，透明背景直接疊進 MV。',
+        image: '/card-lyric.png',
+        path: './lyric-animator/index.html',
+    },
+    {
+        id: 'artwork-id',
+        title: '作品身分證 Art Work ID',
+        description: '上傳作品圖，一鍵產出網頁用圖檔與作品資料卡。',
+        image: '/card-artwork-id.png',
+        path: 'https://artwork-id.vercel.app/',
+        external: true,
+    },
+    {
         id: 'coming-soon',
         title: '即將推出...',
         description: '更多有趣的小工具正在開發中，敬請期待！',
@@ -62,6 +77,10 @@ function createCard(widget) {
     a.href = widget.path;
     a.className = 'tool-card';
     a.id = `tool-${widget.id}`;
+    if (widget.external) {
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+    }
 
     // Image or placeholder
     let mediaHTML;

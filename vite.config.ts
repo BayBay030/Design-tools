@@ -27,6 +27,7 @@ export default defineConfig({
                 presentHelper: path.resolve(__dirname, 'present-helper/index.html'),
                 instaLayoutPlanner: path.resolve(__dirname, 'instalayout-planner/index.html'),
                 gifMaker: path.resolve(__dirname, 'gif-maker/index.html'),
+                lyricAnimator: path.resolve(__dirname, 'lyric-animator/index.html'),
             },
         },
     },

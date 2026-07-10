@@ -42,3 +42,6 @@ dist-ssr
 *.psd
 *.sketch
 *.fig
+
+# Source folder for lyric-animator (local only, not part of the site)
+MV lyris/
