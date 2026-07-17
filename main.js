@@ -47,13 +47,6 @@ const widgets = [
         path: './gif-maker/index.html',
     },
     {
-        id: 'lyric-animator',
-        title: '歌詞動畫產生器',
-        description: '匯入音檔與歌詞，即時預覽多種字幕動畫效果，透明背景直接疊進 MV。',
-        image: '/card-lyric.png',
-        path: './lyric-animator/index.html',
-    },
-    {
         id: 'artwork-id',
         title: '作品身分證 Art Work ID',
         description: '上傳作品圖，一鍵產出網頁用圖檔與作品資料卡。',
