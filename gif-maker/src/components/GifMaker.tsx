@@ -680,6 +680,18 @@ export default function GifMaker() {
         {/* Hidden Canvas for MP4 Generation */}
         <canvas ref={canvasRef} className="hidden" />
       </div>
+
+      {/* Author credit */}
+      <footer className="pt-2 text-center">
+        <a
+          href="https://baybay030.github.io"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors no-underline"
+        >
+          ⊹ 𝘽🜁𝙔𝘽🜁𝙔
+        </a>
+      </footer>
     </div>
   );
 }

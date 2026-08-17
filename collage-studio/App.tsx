@@ -296,6 +296,15 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Author credit — sits in the title bar so it reads as part of the window chrome */}
+            <a
+              href="https://baybay030.github.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center px-2.5 py-1 mr-1 border-2 border-black bg-white text-xs font-bold hover:bg-pink-100 transition-colors no-underline text-black"
+            >
+              ⊹ 𝘽🜁𝙔𝘽🜁𝙔
+            </a>
             <div className="w-6 h-6 border-2 border-black bg-white flex items-center justify-center text-xs font-bold hover:bg-pink-100 cursor-pointer">_</div>
             <div className="w-6 h-6 border-2 border-black bg-white flex items-center justify-center text-xs font-bold hover:bg-pink-100 cursor-pointer">□</div>
             <div className="w-6 h-6 border-2 border-black bg-pink-400 flex items-center justify-center text-xs font-bold hover:bg-pink-500 cursor-pointer text-white">X</div>

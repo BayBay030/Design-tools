@@ -1,0 +1,6 @@
+{
+  "name": "STL 3D Model Viewer",
+  "description": "An interactive STL file uploader and 3D preview showcase app.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

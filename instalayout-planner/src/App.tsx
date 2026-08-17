@@ -444,6 +444,16 @@ export default function App() {
             )}
           </Reorder.Group>
         </div>
+
+        {/* Author credit — pinned to the bottom of the sidebar */}
+        <a
+          href="https://baybay030.github.io"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mx-4 mb-4 mt-auto shrink-0 text-center py-3 rounded-2xl bg-white border-2 border-black/5 text-[11px] font-black uppercase tracking-widest text-black/40 hover:text-brand-pink transition-colors no-underline"
+        >
+          ⊹ 𝘽🜁𝙔𝘽🜁𝙔
+        </a>
       </div>
 
       {/* Main Preview Area */}

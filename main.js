@@ -55,6 +55,13 @@ const widgets = [
         external: true,
     },
     {
+        id: 'stl-viewer',
+        title: 'STL 3D 模型檢視器',
+        description: '上傳 STL / STEP 檔即時預覽，量測尺寸、體積與列印重量，可匯出 STL 或錄製 360° 展示影片。',
+        image: '/card-stl.png',
+        path: './stl-viewer/index.html',
+    },
+    {
         id: 'coming-soon',
         title: '即將推出...',
         description: '更多有趣的小工具正在開發中，敬請期待！',

@@ -1,0 +1,21 @@
+{
+  "name": "stl-viewer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "note": "Built as part of the widget-hub multi-page app — the root vite.config.ts is what actually builds this. Versions here mirror the root package.json.",
+  "dependencies": {
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^0.562.0",
+    "occt-import-js": "^0.0.23",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "three": "^0.184.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/three": "^0.184.1",
+    "tailwindcss": "^4.2.1",
+    "typescript": "~5.8.2"
+  }
+}

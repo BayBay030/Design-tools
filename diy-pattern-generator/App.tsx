@@ -482,8 +482,14 @@ const App: React.FC = () => {
         <div className="flex gap-2">
           {/* Tile_Previewer -> 𝙲𝚈𝙱𝙴𝚁 ⌁ 𝙳𝚁𝙸𝙵𝚃𝙴𝚁 */}
           <div className="win95-button h-11 px-8 bg-white pixel-text" style={{ color: PRIMARY_PINK, borderColor: BORDER_COLOR }}>𝙲𝚈𝙱𝙴𝚁 ⌁ 𝙳𝚁𝙸𝙵𝚃𝙴𝚁</div>
-          {/* Debugger.log -> ⊹ 𝘽🜁𝙔𝘽🜁𝙔 */}
-          <div className="win95-button h-11 px-8 bg-white pixel-text" style={{ color: TEXT_DARK, borderColor: BORDER_COLOR }}>⊹ 𝘽🜁𝙔𝘽🜁𝙔</div>
+          {/* Debugger.log -> ⊹ 𝘽🜁𝙔𝘽🜁𝙔 (author credit, links out to the personal site) */}
+          <a
+            href="https://baybay030.github.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="win95-button h-11 px-8 bg-white pixel-text no-underline"
+            style={{ color: TEXT_DARK, borderColor: BORDER_COLOR }}
+          >⊹ 𝘽🜁𝙔𝘽🜁𝙔</a>
         </div>
         <div className="flex-1" />
         <div className="win95-inset px-6 py-1 flex items-center gap-3 text-[12px] font-bold h-11 bg-white pixel-text" style={{ color: PRIMARY_PINK, borderColor: BORDER_COLOR }}>
