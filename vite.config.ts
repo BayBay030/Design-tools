@@ -28,6 +28,7 @@ export default defineConfig({
                 instaLayoutPlanner: path.resolve(__dirname, 'instalayout-planner/index.html'),
                 gifMaker: path.resolve(__dirname, 'gif-maker/index.html'),
                 stlViewer: path.resolve(__dirname, 'stl-viewer/index.html'),
+                pixelStudio: path.resolve(__dirname, '90s-retro-pixel-studio/index.html'),
             },
         },
     },

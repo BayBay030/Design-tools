@@ -22,6 +22,8 @@ dist-ssr
 .idea
 .DS_Store
 **/.DS_Store
+._*
+**/._*
 *.suo
 *.ntvs*
 *.njsproj
@@ -42,6 +44,8 @@ dist-ssr
 *.psd
 *.sketch
 *.fig
+*.af
+*.af~lock~*
 
 # Source folder for lyric-animator (local only, not part of the site)
 MV lyris/

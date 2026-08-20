@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --color-win-bg: #C0C0C0;
+  --color-win-blue: #000080;
+  --color-win-teal: #008080;
+  --color-win-border-light: #FFFFFF;
+  --color-win-border-dark: #808080;
+  --color-win-border-deep: #000000;
+  --font-win: "Courier New", "Arial Narrow", monospace, sans-serif;
+}
+
+@utility win-outset {
+  border: 1.5px solid;
+  border-top-color: var(--color-win-border-light);
+  border-left-color: var(--color-win-border-light);
+  border-right-color: var(--color-win-border-deep);
+  border-bottom-color: var(--color-win-border-deep);
+  box-shadow: inset 1px 1px 0px 0px var(--color-win-border-light), 
+              inset -1px -1px 0px 0px var(--color-win-border-dark);
+}
+
+@utility win-inset {
+  border: 1.5px solid;
+  border-top-color: var(--color-win-border-dark);
+  border-left-color: var(--color-win-border-dark);
+  border-right-color: var(--color-win-border-light);
+  border-bottom-color: var(--color-win-border-light);
+  box-shadow: inset 1px 1px 0px 0px var(--color-win-border-deep), 
+              inset -1px -1px 0px 0px var(--color-win-border-dark);
+}
+
+@utility win-titlebar {
+  background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+  color: white;
+  padding: 3px 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+}
+
+@utility dither-pattern {
+  background-image: radial-gradient(circle, #000 1px, transparent 1px);
+  background-size: 2px 2px;
+  opacity: 0.1;
+}
+
+@utility crt-scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+}
+
+@utility pixelated {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+@utility alpha-checkerboard {
+  background-image: linear-gradient(45deg, #181818 25%, transparent 25%), 
+                    linear-gradient(-45deg, #181818 25%, transparent 25%), 
+                    linear-gradient(45deg, transparent 75%, #181818 75%), 
+                    linear-gradient(-45deg, transparent 75%, #181818 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+  background-color: #0c0c0c;
+}
+

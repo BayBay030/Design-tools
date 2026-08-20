@@ -1,0 +1,8 @@
+{
+  "name": "90s Retro Pixel Studio",
+  "description": "Transform your photos into 90s low-pixel computer software aesthetics with retro dithering, pixelation, and hardware glitch corruption effects.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

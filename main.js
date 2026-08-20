@@ -62,6 +62,13 @@ const widgets = [
         path: './stl-viewer/index.html',
     },
     {
+        id: 'pixel-studio',
+        title: '90s 復古像素轉換器',
+        description: '把照片變成 90 年代電腦點陣風格，可調抖動網點、色深壓縮、故障特效與復古調色盤。',
+        image: '/card-pixel.png',
+        path: './90s-retro-pixel-studio/index.html',
+    },
+    {
         id: 'coming-soon',
         title: '即將推出...',
         description: '更多有趣的小工具正在開發中，敬請期待！',
