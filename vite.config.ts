@@ -29,6 +29,8 @@ export default defineConfig({
                 gifMaker: path.resolve(__dirname, 'gif-maker/index.html'),
                 stlViewer: path.resolve(__dirname, 'stl-viewer/index.html'),
                 pixelStudio: path.resolve(__dirname, '90s-retro-pixel-studio/index.html'),
+                paperPoster: path.resolve(__dirname, 'paper-poster/index.html'),
+                holoEffect: path.resolve(__dirname, 'holo-effect/index.html'),
             },
         },
     },

@@ -10,6 +10,11 @@ lerna-debug.log*
 node_modules/
 **/node_modules/
 
+# Python 快取（tools/ 的壓縮腳本會產生）
+__pycache__/
+**/__pycache__/
+*.pyc
+
 # Build output
 dist/
 **/dist/

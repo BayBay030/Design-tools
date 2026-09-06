@@ -69,6 +69,20 @@ const widgets = [
         path: './90s-retro-pixel-studio/index.html',
     },
     {
+        id: 'paper-poster',
+        title: '紙海報摺痕模擬器',
+        description: '把作品圖變成有摺痕、皺褶、折角的紙本海報，紙質與燈光都能調，可拖四角折起來，一鍵存 PNG。',
+        image: '/card-paper.png',
+        path: './paper-poster/index.html',
+    },
+    {
+        id: 'holo-effect',
+        title: '閃卡炫光材質產生器',
+        description: '把任何圖片變成會跟著滑鼠轉的全息閃卡：方閃、碎閃、經典彩虹三種材質，可輸出 PNG 或複製 CSS 直接用在自己的專案。',
+        image: '/card-holo.png',
+        path: './holo-effect/index.html',
+    },
+    {
         id: 'coming-soon',
         title: '即將推出...',
         description: '更多有趣的小工具正在開發中，敬請期待！',

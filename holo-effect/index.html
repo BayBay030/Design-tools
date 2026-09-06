@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Holo Foil 調參台 — Bay (3x3) Studio</title>
+<link rel="stylesheet" href="holo.css">
+<style>
+
+  /* ==========================================================================
+     調參台介面。像素／復古視窗風，全部手刻，圖示都是自畫 SVG，沒有 emoji。
+     這一整段跟閃光效果無關，搬 holo.css 走的時候不用帶。
+     ========================================================================== */
+
+  :root {
+    --ink:     #3f2c22;   /* 深咖啡：邊框與文字 */
+    --ink-2:   #6b5244;
+    --cream:   #f8e8d4;   /* 米色面板 */
+    --cream-2: #efd8bb;
+    --paper:   #dde6fb;   /* 格線紙底 */
+    --grid:    #ffffff;
+    --teal:    #63c3b6;
+    --orange:  #e8862c;
+    --yellow:  #f2c53d;
+    --pink:    #f56ba3;
+    --green:   #7fd36f;
+    --px:      3px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--ink);
+    font: 13px/1.65 "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+    background:
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 34px),
+      repeating-linear-gradient(0deg,  var(--grid) 0 1px, transparent 1px 34px),
+      var(--paper);
+    display: grid;
+    grid-template-columns: 1fr 372px;
+  }
+
+  /* ---------- 左：舞台 ---------- */
+
+  .stage {
+    display: grid;
+    place-items: center;
+    padding: 40px 24px 70px;
+    position: relative;
+  }
+  .stage__hint {
+    position: absolute;
+    bottom: 24px; left: 0; right: 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+  .stage.is-drop { outline: var(--px) dashed var(--ink); outline-offset: -16px; }
+  .stage__slot { display: grid; place-items: center; }
+
+  /* ---------- 卡面 ---------- */
+
+  .face {
+    width: 100%; height: 100%;
+    aspect-ratio: auto;
+    position: relative;
+    overflow: hidden;
+  }
+  .face > img, .tmpl__win > img {
+    display: block; width: 100%; height: 100%;
+    object-fit: cover; aspect-ratio: auto;
+  }
+  .face__empty {
+    position: absolute; inset: 0; margin: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px;
+    font-weight: 700; font-size: 13px; letter-spacing: .1em;
+    color: var(--ink);
+    text-align: center;
+    aspect-ratio: auto;
+  }
+  .face__empty span { font-size: 11px; font-weight: 400; opacity: .68; letter-spacing: .03em; }
+  .face__empty svg { width: 26px; height: 26px; }
+
+  /* A / B：乾淨滿版，沒有任何框線文字 */
+  .face--plain { background: linear-gradient(150deg, #cfd8f4 0%, #b8c2e6 45%, #d6c6dd 100%); }
+
+  /* C：寶可夢卡版型 */
+  .face--tmpl {
+    background: linear-gradient(150deg, #cfd8f4 0%, #a9b4dd 44%, #cdbcd6 74%, #e4cdbe 100%);
+    display: grid;
+    grid-template-rows: 13% 1fr 24%;
+    padding: 5.5% 6%;
+    gap: 3%;
+  }
+  .face--tmpl > * { grid-area: auto; aspect-ratio: auto; }
+  .tmpl__bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--cream);
+    border: 2px solid var(--ink);
+    padding: 0 8px;
+    color: var(--ink); font-weight: 700; font-size: 12px; letter-spacing: .06em;
+    overflow: hidden; white-space: nowrap;
+  }
+  .tmpl__win {
+    border: 2px solid var(--ink);
+    background: linear-gradient(160deg, #ffe9a8 0%, #e79b5a 32%, #8a5f9e 68%, #3a3560 100%);
+    position: relative; overflow: hidden; aspect-ratio: auto;
+  }
+  .tmpl__text {
+    margin: 0;
+    background: var(--cream);
+    border: 2px solid var(--ink);
+    padding: 6px 8px;
+    color: var(--ink); font-size: 10px; line-height: 1.5;
+    overflow: hidden; white-space: pre-wrap; aspect-ratio: auto;
+  }
+
+  /* ---------- 右：控制面板（一疊復古視窗）---------- */
+
+  .panel { height: 100vh; overflow-y: auto; padding: 14px 14px 40px; }
+
+  .win {
+    background: var(--cream);
+    border: var(--px) solid var(--ink);
+    margin-bottom: 12px;
+  }
+  .win__bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    background: var(--teal);
+    border-bottom: var(--px) solid var(--ink);
+    padding: 5px 8px;
+    font-weight: 700; font-size: 12px; letter-spacing: .08em;
+  }
+  .win__bar--orange { background: var(--orange); }
+  .win__bar--yellow { background: var(--yellow); }
+  .win__bar--pink   { background: var(--pink); }
+  .win__dots { display: flex; gap: 5px; }
+  .win__dots i {
+    width: 11px; height: 11px; display: block;
+    border: 2px solid var(--ink);
+    background: var(--cream);
+  }
+  .win__dots i:nth-child(2) { border-radius: 50%; }
+  .win__body { padding: 10px 10px 12px; }
+
+  .head { display: flex; align-items: center; gap: 8px; }
+  .head svg { width: 16px; height: 16px; flex: none; }
+  .sub { margin: 0; font-size: 11px; color: var(--ink-2); }
+
+  /* ---------- 分頁鈕 ---------- */
+
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tabs button {
+    flex: 1 1 auto; min-width: 78px;
+    padding: 7px 8px;
+    background: var(--cream-2);
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    color: var(--ink);
+    font: inherit; font-size: 12px; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--ink);
+    transition: transform .1s, box-shadow .1s, background .15s;
+  }
+  .tabs button:hover { background: #fff3e2; }
+  .tabs button:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+  .tabs button[aria-pressed="true"] {
+    background: var(--ink); color: var(--cream);
+    box-shadow: 2px 2px 0 var(--ink-2);
+  }
+  .tabs--carrier button { min-width: 92px; }
+
+  .note { font-size: 11px; line-height: 1.6; color: var(--ink-2); margin: 9px 0 0; }
+
+  /* ---------- 滑桿 ---------- */
+
+  .ctl { display: grid; grid-template-columns: 78px 1fr 52px; align-items: center; gap: 8px; margin: 9px 0; }
+  .ctl__name { font-size: 12px; }
+  .ctl output { font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 18px; background: transparent; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 12px;
+    background: #fff6ea;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px; margin-top: -5px;
+    border-radius: 50%;
+    background: var(--yellow);
+    border: 2px solid var(--ink);
+  }
+  input[type=range]:active::-webkit-slider-thumb { background: var(--pink); }
+
+  /* ---------- 下拉 / 文字欄 ---------- */
+
+  select, .txt {
+    width: 100%; padding: 6px 8px;
+    background: #fff6ea; color: var(--ink);
+    border: 2px solid var(--ink);
+    font: inherit; font-size: 12px;
+    resize: vertical;
+  }
+  select:focus, .txt:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+
+  /* ---------- 勾選 ---------- */
+
+  .row { display: flex; align-items: flex-start; gap: 8px; margin: 11px 0; font-size: 12px; }
+  .row input[type=checkbox] {
+    appearance: none;
+    width: 16px; height: 16px; flex: none; margin: 2px 0 0;
+    background: #fff6ea;
+    border: 2px solid var(--ink);
+    cursor: pointer;
+    position: relative;
+  }
+  .row input[type=checkbox]:checked { background: var(--green); }
+  .row input[type=checkbox]:checked::after {
+    content: ""; position: absolute; inset: 1px;
+    background:
+      linear-gradient(45deg, transparent 42%, var(--ink) 42% 58%, transparent 58%),
+      linear-gradient(-45deg, transparent 42%, var(--ink) 42% 58%, transparent 58%);
+  }
+  .row label { cursor: pointer; }
+  .row span { opacity: .7; }
+
+  /* ---------- 按鈕 ---------- */
+
+  /* ---------- 回小工具大幫手 ---------- */
+
+  .backhome {
+    position: absolute; left: 24px; top: 22px; z-index: 20;
+    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 7px 13px;
+    background: var(--yellow);
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    color: var(--ink); text-decoration: none;
+    font: inherit; font-size: 12px; font-weight: 700;
+    box-shadow: 2px 2px 0 var(--ink);
+    transition: transform .1s, box-shadow .1s, background .15s;
+  }
+  .backhome:hover { background: #ffd95e; }
+  .backhome:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+  .backhome svg { width: 13px; height: 13px; flex: none; }
+
+  .credit {
+    margin: 14px 2px 0;
+    text-align: center;
+    font-size: 11px; line-height: 1.9; color: var(--ink-2);
+  }
+  .credit a { color: var(--ink-2); text-decoration: none; border-bottom: 1px dotted var(--ink-2); }
+  .credit a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px 12px;
+    background: var(--cream-2);
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    color: var(--ink); font: inherit; font-size: 12px; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--ink);
+    transition: transform .1s, box-shadow .1s, background .15s;
+  }
+  .btn:hover { background: #fff3e2; }
+  .btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+  .btn svg { width: 14px; height: 14px; flex: none; }
+  .btn input[type=file] { display: none; }
+  .btn--go { background: var(--teal); }
+  .btn--go:hover { background: #7ad4c7; }
+  .btn--x { padding: 8px 10px; }
+
+  .acts { display: flex; gap: 8px; margin-top: 12px; }
+  .acts .btn { flex: 1; padding: 9px 6px; }
+
+  .upload { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 8px; margin: 9px 0; }
+  .upload__name { font-size: 12px; font-weight: 700; }
+
+  .out {
+    margin-top: 12px; padding: 9px;
+    background: #fff6ea;
+    border: 2px solid var(--ink);
+    font: 11px/1.55 ui-monospace, Consolas, monospace;
+    white-space: pre-wrap; overflow-x: auto;
+    max-height: 180px; overflow-y: auto;
+  }
+
+  [hidden] { display: none !important; }
+
+  @media (max-width: 940px) {
+    body { grid-template-columns: 1fr; }
+    .panel { height: auto; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <a class="backhome" href="../index.html">
+    <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
+      <path d="M7 2h2v2H7zM5 4h2v2H5zM3 6h2v2H3zM3 8h2v2H3zM5 10h2v2H5zM7 12h2v2H7zM5 7h9v2H5z"/>
+    </svg>
+    小工具大幫手
+  </a>
+  <div class="stage__slot">
+
+    <div class="foil" id="card" data-foil="grid" data-carrier="a" data-tilt="14">
+      <div class="foil__tilt">
+        <div class="foil__art">
+
+          <!-- A / B：滿版，沒有任何文字 -->
+          <div class="face face--plain" id="facePlain">
+            <img id="artFull" alt="" hidden>
+            <p class="face__empty" id="facePlainHint">
+              <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
+                <path d="M2 2h12v2H2zM2 4h2v8H2zM12 4h2v8h-2zM2 12h12v2H2zM6 6h4v1H6zM5 7h6v1H5zM6 8h4v1H6z"/>
+              </svg>
+              上傳你的圖
+              <span>滿版鋪滿整張</span>
+            </p>
+          </div>
+
+          <!-- C：寶可夢卡版型 -->
+          <div class="face face--tmpl" id="faceTmpl" hidden>
+            <div class="tmpl__bar"><span id="tName">SAMPLE</span><span id="tHp">HP 120</span></div>
+            <div class="tmpl__win">
+              <img id="artWin" alt="" hidden>
+              <p class="face__empty" id="faceTmplHint">上傳你的圖<span>自動裁切成卡圖框</span></p>
+            </div>
+            <p class="tmpl__text" id="tBody">說明文字可以在右邊面板改。</p>
+          </div>
+
+        </div>
+        <div class="foil__sheen"></div>
+        <div class="foil__gloss"></div>
+        <div class="foil__over"><img id="overArt" alt="" hidden></div>
+      </div>
+    </div>
+
+  </div>
+  <p class="stage__hint">滑鼠移到卡片上 · 右邊「圖片 → 選擇圖片」上傳，或直接把圖拖進來</p>
+</div>
+
+
+<aside class="panel">
+
+
+  <section class="win">
+    <div class="win__bar">
+      <span class="head">
+        <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
+          <path d="M7 1h2v3H7zM7 12h2v3H7zM1 7h3v2H1zM12 7h3v2h-3zM6 4h4v1H6zM5 5h6v1H5zM4 6h8v4H4zM5 10h6v1H5zM6 11h4v1H6z"/>
+        </svg>
+        HOLO FOIL 調參台
+      </span>
+      <span class="win__dots"><i></i><i></i><i></i></span>
+    </div>
+    <div class="win__body">
+      <p class="sub">Bay (3x3) Studio · 三種閃卡材質 · 全部手刻零依賴</p>
+    </div>
+  </section>
+
+  <section class="win">
+    <div class="win__bar win__bar--pink">
+      <span>材質</span><span class="win__dots"><i></i><i></i><i></i></span>
+    </div>
+    <div class="win__body">
+      <div class="tabs">
+        <button type="button" data-foil="grid" aria-pressed="true">方閃</button>
+        <button type="button" data-foil="glitter" aria-pressed="false">碎閃</button>
+        <button type="button" data-foil="rainbow" aria-pressed="false">經典彩虹</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="win">
+    <div class="win__bar win__bar--yellow">
+      <span>載體</span><span class="win__dots"><i></i><i></i><i></i></span>
+    </div>
+    <div class="win__body">
+      <div class="tabs tabs--carrier">
+        <button type="button" data-carrier="a" aria-pressed="true">A 方形貼紙</button>
+        <button type="button" data-carrier="b" aria-pressed="false">B 塔羅牌</button>
+        <button type="button" data-carrier="c" aria-pressed="false">C 寶可夢卡</button>
+      </div>
+      <p class="note" id="carrierNote"></p>
+      <label class="ctl"><span class="ctl__name">長寬比</span><input type="range" id="ratio" data-unit="" min="0.4" max="1.2" step="0.001" value="1"><output></output></label>
+    </div>
+  </section>
+
+  <section class="win">
+    <div class="win__bar">
+      <span>圖片</span><span class="win__dots"><i></i><i></i><i></i></span>
+    </div>
+    <div class="win__body">
+      <div class="upload">
+        <span class="upload__name">底圖</span>
+        <label class="btn btn--go">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M7 2h2v7H7zM5 4h2v1H5zM9 4h2v1H9zM4 5h2v1H4zM10 5h2v1h-2zM2 11h12v3H2z"/></svg>
+          選擇圖片
+          <input type="file" id="fileMain" accept="image/*">
+        </label>
+        <button type="button" class="btn btn--x" id="clearMain">清除</button>
+      </div>
+      <div class="upload">
+        <span class="upload__name">上層圖</span>
+        <label class="btn">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M7 2h2v7H7zM5 4h2v1H5zM9 4h2v1H9zM4 5h2v1H4zM10 5h2v1h-2zM2 11h12v3H2z"/></svg>
+          選擇圖片
+          <input type="file" id="fileOver" accept="image/*">
+        </label>
+        <button type="button" class="btn btn--x" id="clearOver">清除</button>
+      </div>
+      <p class="note">上層圖蓋在閃光<b>上面</b>，透明的地方會透出閃光。想做「線稿在最上層、閃光從鏤空處透出來」就放這裡。</p>
+    </div>
+  </section>
+
+  <section class="win" data-show="carrier-c" hidden>
+    <div class="win__bar win__bar--orange">
+      <span>卡片文字（只有 C 有）</span><span class="win__dots"><i></i><i></i><i></i></span>
+    </div>
+    <div class="win__body">
+      <div class="ctl" style="grid-template-columns:78px 1fr"><span class="ctl__name">名稱</span><input type="text" class="txt" id="inName" value="SAMPLE"></div>
+      <div class="ctl" style="grid-template-columns:78px 1fr"><span class="ctl__name">右上角</span><input type="text" class="txt" id="inHp" value="HP 120"></div>
+      <div class="ctl" style="grid-template-columns:78px 1fr"><span class="ctl__name">說明</span><textarea class="txt" id="inBody" rows="3">說明文字可以在右邊面板改。</textarea></div>
+    </div>
+  </section>
+
+  <section class="win">
+    <div class="win__bar"><span>畫質</span><span class="win__dots"><i></i><i></i><i></i></span></div>
+    <div class="win__body">
+      <div class="row">
+        <input type="checkbox" id="always">
+        <label for="always">常亮（不用滑到上面也一直閃）</label>
+      </div>
+      <label class="ctl"><span class="ctl__name">閃光強度</span><input type="range" data-var="--power"      data-unit="" min="0"   max="2"   step="0.01" value="1"><output></output></label>
+      <label class="ctl"><span class="ctl__name">亮度</span>    <input type="range" data-var="--bright"     data-unit="" min="0.2" max="2"   step="0.01" value="0.62"><output></output></label>
+      <label class="ctl"><span class="ctl__name">對比</span>    <input type="range" data-var="--contrast"   data-unit="" min="0.5" max="5"   step="0.05" value="1.8"><output></output></label>
+      <label class="ctl"><span class="ctl__name">飽和</span>    <input type="range" data-var="--sat"        data-unit="" min="0"   max="3"   step="0.05" value="1.25"><output></output></label>
+      <label class="ctl"><span class="ctl__name">白色反光</span><input type="range" data-var="--gloss"      data-unit="" min="0"   max="1.5" step="0.01" value="0.62"><output></output></label>
+      <label class="ctl"><span class="ctl__name">反光範圍</span><input type="range" data-var="--gloss-size" data-unit="%" min="20" max="140" step="1"    value="62"><output></output></label>
+      <div class="ctl" style="grid-template-columns:78px 1fr">
+        <span class="ctl__name">混合模式</span>
+        <select id="blend">
+          <option value="color-dodge" selected>color-dodge（最亮，預設）</option>
+          <option value="screen">screen（柔和）</option>
+          <option value="overlay">overlay（保留底圖）</option>
+          <option value="hard-light">hard-light（硬）</option>
+          <option value="soft-light">soft-light（很淡）</option>
+          <option value="lighten">lighten</option>
+          <option value="plus-lighter">plus-lighter（過曝）</option>
+        </select>
+      </div>
+      <label class="ctl"><span class="ctl__name">卡片大小</span><input type="range" data-var="--card-w" data-unit="px" min="180" max="520" step="4" value="320"><output></output></label>
+      <label class="ctl"><span class="ctl__name">傾斜幅度</span><input type="range" id="tilt" data-unit="deg" min="0" max="30" step="0.5" value="14"><output></output></label>
+      <div class="acts">
+        <button type="button" class="btn" id="btnSweep">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M4 2h8v2H4zM2 4h2v8H2zM12 4h2v8h-2zM4 12h8v2H4zM7 5h2v6H7zM5 7h6v2H5z"/></svg>
+          繞一圈
+        </button>
+        <button type="button" class="btn" id="btnReset">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M6 2h4v2H6zM4 4h2v2H4zM10 4h2v2h-2zM2 6h2v4H2zM12 6h2v4h-2zM4 10h2v2H4zM10 10h2v2h-2zM6 12h4v2H6z"/></svg>
+          重設
+        </button>
+        <button type="button" class="btn" id="btnCopy">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 2h8v2H2zM2 4h2v8H2zM8 4h2v2H8zM6 6h8v2H6zM6 8h2v6H6zM12 8h2v6h-2zM6 12h8v2H6z"/></svg>
+          複製 CSS
+        </button>
+      </div>
+      <div class="out" id="out">按「複製 CSS」會把目前這組數值輸出成一段可以直接貼的 CSS。</div>
+    </div>
+  </section>
+
+  <section class="win" data-show="grid">
+    <div class="win__bar win__bar--pink"><span>方閃參數</span><span class="win__dots"><i></i><i></i><i></i></span></div>
+    <div class="win__body">
+      <label class="ctl"><span class="ctl__name">方格大小</span><input type="range" data-var="--sq"      data-unit="px"  min="6"   max="70"  step="0.1"  value="25.3"><output></output></label>
+      <label class="ctl"><span class="ctl__name">放射密度</span><input type="range" data-var="--fan"     data-unit="deg" min="15"  max="360" step="1"    value="62"><output></output></label>
+      <label class="ctl"><span class="ctl__name">放射轉動</span><input type="range" data-var="--spin"    data-unit="deg" min="0"   max="720" step="10"   value="200"><output></output></label>
+      <label class="ctl"><span class="ctl__name">過渡柔順</span><input type="range" data-var="--soften"  data-unit=""    min="0.2" max="1.4" step="0.02" value="0.58"><output></output></label>
+      <label class="ctl"><span class="ctl__name">雷射感</span>  <input type="range" data-var="--laser"   data-unit=""    min="1"   max="4"   step="0.05" value="1.05"><output></output></label>
+      <label class="ctl"><span class="ctl__name">碟面大小</span><input type="range" data-var="--disc"    data-unit=""    min="0.1" max="0.8" step="0.01" value="0.4"><output></output></label>
+      <label class="ctl"><span class="ctl__name">銀塊強度</span><input type="range" data-var="--metal"        data-unit="" min="0"   max="1"   step="0.01" value="0.92"><output></output></label>
+      <label class="ctl"><span class="ctl__name">銀塊亮度</span><input type="range" data-var="--metal-bright" data-unit="" min="0.3" max="2"   step="0.01" value="0.95"><output></output></label>
+      <label class="ctl"><span class="ctl__name">中心洞</span>  <input type="range" data-var="--core"    data-unit=""    min="0"   max="2"   step="0.02" value="0.5"><output></output></label>
+      <label class="ctl"><span class="ctl__name">溝紋強度</span><input type="range" data-var="--groove"  data-unit=""    min="0"   max="1"   step="0.01" value="0.3"><output></output></label>
+      <label class="ctl"><span class="ctl__name">溝紋間距</span><input type="range" data-var="--ring"    data-unit="px"  min="1"   max="16"  step="0.1"  value="3"><output></output></label>
+      <label class="ctl"><span class="ctl__name">斜切對比</span><input type="range" data-var="--bevel"   data-unit=""    min="0"   max="1"   step="0.01" value="0.9"><output></output></label>
+      <label class="ctl"><span class="ctl__name">格線粗細</span><input type="range" data-var="--seam"    data-unit="px"  min="0"   max="4"   step="0.1"  value="1"><output></output></label>
+      <label class="ctl"><span class="ctl__name">色相掃幅</span><input type="range" data-var="--sweep"   data-unit="deg" min="0"   max="720" step="5"    value="280"><output></output></label>
+    </div>
+  </section>
+
+  <section class="win" data-show="glitter" hidden>
+    <div class="win__bar win__bar--pink"><span>碎閃參數</span><span class="win__dots"><i></i><i></i><i></i></span></div>
+    <div class="win__body">
+      <label class="ctl"><span class="ctl__name">碎片大小</span><input type="range" data-var="--dust"    data-unit="px"  min="40"  max="420" step="2"    value="110"><output></output></label>
+      <label class="ctl"><span class="ctl__name">散佈</span>    <input type="range" data-var="--scatter" data-unit=""    min="0"   max="1"   step="0.02" value="1"><output></output></label>
+      <label class="ctl"><span class="ctl__name">景深錯位</span><input type="range" data-var="--depth"   data-unit=""    min="0"   max="3"   step="0.05" value="1"><output></output></label>
+      <label class="ctl"><span class="ctl__name">星星亮度</span><input type="range" data-var="--sparkle" data-unit=""    min="0.3" max="3"   step="0.05" value="1.35"><output></output></label>
+      <label class="ctl"><span class="ctl__name">幻彩幅度</span><input type="range" data-var="--iris"    data-unit="deg" min="40"  max="720" step="10"   value="340"><output></output></label>
+      <label class="ctl"><span class="ctl__name">疏密起伏</span><input type="range" data-var="--haze"    data-unit=""    min="0"   max="1"   step="0.01" value="0.55"><output></output></label>
+      <label class="ctl"><span class="ctl__name">過渡柔順</span><input type="range" data-var="--soften"  data-unit=""    min="0.2" max="1.4" step="0.02" value="0.7"><output></output></label>
+      <label class="ctl"><span class="ctl__name">色相掃幅</span><input type="range" data-var="--sweep"   data-unit="deg" min="0"   max="720" step="10"   value="180"><output></output></label>
+      <div class="acts">
+        <button type="button" class="btn" id="btnShuffle">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 2h12v12H2zM4 4h2v2H4zM10 4h2v2h-2zM7 7h2v2H7zM4 10h2v2H4zM10 10h2v2h-2z"/></svg>
+          重骰位置
+        </button>
+      </div>
+      <p class="note">「散佈」= 四層星圖各自往自己的隨機方向錯開多少。<b>0 = 全部從同一個角落起算</b>（會看得出規律的超級格子），拉到 1 就完全錯開。按「重骰位置」換一組新的隨機方向。</p>
+    </div>
+  </section>
+
+  <section class="win" data-show="rainbow" hidden>
+    <div class="win__bar win__bar--pink"><span>彩虹參數</span><span class="win__dots"><i></i><i></i><i></i></span></div>
+    <div class="win__body">
+      <label class="ctl"><span class="ctl__name">彩虹角度</span><input type="range" data-var="--angle"  data-unit="deg" min="0"   max="360"  step="1"  value="118"><output></output></label>
+      <label class="ctl"><span class="ctl__name">炫彩範圍</span><input type="range" data-var="--reach"  data-unit=""    min="0.4" max="3.5"  step="0.05" value="1.7"><output></output></label>
+      <label class="ctl"><span class="ctl__name">彩虹密度</span><input type="range" data-var="--spread" data-unit="%"   min="200" max="2400" step="20" value="400"><output></output></label>
+      <label class="ctl"><span class="ctl__name">掃描線</span>  <input type="range" data-var="--line"   data-unit="px"  min="0.5" max="6"    step="0.1" value="1.4"><output></output></label>
+    </div>
+  </section>
+
+  <section class="win">
+    <div class="win__bar win__bar--orange">
+      <span>輸出 PNG</span><span class="win__dots"><i></i><i></i><i></i></span>
+    </div>
+    <div class="win__body">
+      <div class="ctl" style="grid-template-columns:78px 1fr">
+        <span class="ctl__name">輸出尺寸</span>
+        <select id="exScale">
+          <option value="1">1× 目前大小</option>
+          <option value="2" selected>2×</option>
+          <option value="3">3×</option>
+          <option value="827">塔羅 300dpi（寬 827px）</option>
+          <option value="1654">塔羅 600dpi（寬 1654px）</option>
+        </select>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="exBare">
+        <label for="exBare">只輸出閃光層（去背 PNG）<br><span>不含底圖，透明背景。丟進 Photoshop / Affinity 疊在自己的圖上，圖層混合模式選「線性加亮」或「濾色」。</span></label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="exTilt">
+        <label for="exTilt">保留目前的傾斜角度<br><span>不勾的話輸出正面平放的卡（預設）。</span></label>
+      </div>
+      <div class="acts">
+        <button type="button" class="btn btn--go" id="btnPng">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M7 1h2v7H7zM4 6h2v2H4zM10 6h2v2h-2zM6 8h4v2H6zM2 12h12v3H2z"/></svg>
+          下載 PNG
+        </button>
+      </div>
+      <p class="note" id="exNote">輸出的是目前畫面上這張卡（閃光停在滑鼠最後停的位置）。</p>
+    </div>
+  </section>
+
+  <p class="credit">
+    Holo Foil · 純本機運算，圖不上傳<br>
+    <a href="https://www.instagram.com/blahbay____" target="_blank" rel="noopener noreferrer">𝘽🜁𝙔𝘽🜁𝙔 ⊹ @blahbay____</a>
+  </p>
+
+</aside>
+
+<script type="module" src="./holo.js"></script>
+<script type="module">
+(function () {
+  "use strict";
+
+  var card  = document.getElementById("card");
+  var stage = document.getElementById("stage");
+  var out   = document.getElementById("out");
+  var api   = window.Holo.attach(card);
+
+  var facePlain     = document.getElementById("facePlain");
+  var faceTmpl      = document.getElementById("faceTmpl");
+  var facePlainHint = document.getElementById("facePlainHint");
+  var faceTmplHint  = document.getElementById("faceTmplHint");
+  var artFull       = document.getElementById("artFull");
+  var artWin        = document.getElementById("artWin");
+  var overArt       = document.getElementById("overArt");
+
+  var foil    = "grid";   // grid | glitter | rainbow
+  var carrier = "a";      // a | b | c
+
+  /* ---------- 滑桿 → CSS 變數 ---------- */
+
+  var sliders = [].slice.call(document.querySelectorAll("input[data-var]"));
+  var defaults = {};
+  sliders.forEach(function (s) { defaults[s.dataset.var] = s.value; });
+
+  function apply(s) {
+    var val = s.value + (s.dataset.unit || "");
+    card.style.setProperty(s.dataset.var, val);
+    var o = s.parentNode.querySelector("output");
+    if (o) o.textContent = val || s.value;
+  }
+  sliders.forEach(function (s) {
+    s.addEventListener("input", function () { apply(s); });
+    apply(s);
+  });
+
+  var tilt = document.getElementById("tilt");
+  function applyTilt() {
+    api.setTilt(tilt.value);
+    tilt.parentNode.querySelector("output").textContent = tilt.value + "deg";
+  }
+  tilt.addEventListener("input", applyTilt);
+  applyTilt();
+
+  var blend = document.getElementById("blend");
+  blend.addEventListener("change", function () {
+    card.style.setProperty("--blend", blend.value);
+  });
+
+  var always = document.getElementById("always");
+  always.addEventListener("change", function () { api.setAlways(always.checked); });
+
+  /* ---------- 載體 A / B / C ---------- */
+
+  var ratio = document.getElementById("ratio");
+  var carrierNote = document.getElementById("carrierNote");
+  var carrierTabs = [].slice.call(document.querySelectorAll(".tabs--carrier button"));
+
+  var NOTES = {
+    a: "1:1 方形貼紙。薄片、幾乎沒有厚度，圖滿版鋪滿，沒有任何框線文字。",
+    b: "3:5 塔羅牌。圓角、轉開才看得到紙的厚度，圖滿版鋪滿，沒有任何框線文字。",
+    c: "寶可夢卡版型。圖會自動裁切放進中間的卡圖框，文字在上面那格改。"
+  };
+
+  function setCarrier(c) {
+    carrier = c;
+    card.dataset.carrier = c;
+    card.style.removeProperty("--card-ratio");   // 讓 CSS 的載體預設生效
+    var v = parseFloat(getComputedStyle(card).getPropertyValue("--card-ratio"));
+    if (!isFinite(v)) v = 1;
+    ratio.value = v;
+    ratio.parentNode.querySelector("output").textContent = v.toFixed(3);
+
+    facePlain.hidden = (c === "c");
+    faceTmpl.hidden  = (c !== "c");
+    carrierTabs.forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.carrier === c));
+    });
+    carrierNote.textContent = NOTES[c];
+    syncPanel();
+  }
+  carrierTabs.forEach(function (b) {
+    b.addEventListener("click", function () { setCarrier(b.dataset.carrier); api.sweep(2); });
+  });
+  ratio.addEventListener("input", function () {
+    card.style.setProperty("--card-ratio", ratio.value);
+    ratio.parentNode.querySelector("output").textContent = Number(ratio.value).toFixed(3);
+  });
+
+  /* ---------- 圖片 ---------- */
+
+  function readImage(file, cb) {
+    if (!file || !/^image\//.test(file.type)) return;
+    var r = new FileReader();
+    r.onload = function () { cb(r.result); };
+    r.readAsDataURL(file);
+  }
+  function setMain(url) {
+    [artFull, artWin].forEach(function (img) { img.src = url; img.hidden = false; });
+    facePlainHint.hidden = true; faceTmplHint.hidden = true;
+    api.sweep(2.5);
+  }
+  function clearMain() {
+    [artFull, artWin].forEach(function (img) { img.removeAttribute("src"); img.hidden = true; });
+    facePlainHint.hidden = false; faceTmplHint.hidden = false;
+  }
+  function setOver(url) { overArt.src = url; overArt.hidden = false; api.sweep(2.5); }
+  function clearOver() { overArt.removeAttribute("src"); overArt.hidden = true; }
+
+  document.getElementById("fileMain").addEventListener("change", function (e) {
+    readImage(e.target.files[0], setMain); e.target.value = "";
+  });
+  document.getElementById("fileOver").addEventListener("change", function (e) {
+    readImage(e.target.files[0], setOver); e.target.value = "";
+  });
+  document.getElementById("clearMain").addEventListener("click", clearMain);
+  document.getElementById("clearOver").addEventListener("click", clearOver);
+
+  ["dragenter", "dragover"].forEach(function (ev) {
+    stage.addEventListener(ev, function (e) { e.preventDefault(); stage.classList.add("is-drop"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    stage.addEventListener(ev, function () { stage.classList.remove("is-drop"); });
+  });
+  stage.addEventListener("drop", function (e) {
+    e.preventDefault();
+    readImage(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0], setMain);
+  });
+
+  /* ---------- C 的卡片文字 ---------- */
+
+  [["inName", "tName"], ["inHp", "tHp"], ["inBody", "tBody"]].forEach(function (pair) {
+    var input = document.getElementById(pair[0]);
+    var target = document.getElementById(pair[1]);
+    input.addEventListener("input", function () { target.textContent = input.value; });
+    target.textContent = input.value;
+  });
+
+  /* ---------- 材質分頁 ---------- */
+
+  var tabs = [].slice.call(document.querySelectorAll(".tabs:not(.tabs--carrier) button"));
+
+  function syncPanel() {
+    document.querySelectorAll("[data-show]").forEach(function (el) {
+      var g = el.dataset.show;
+      el.hidden = (g === "carrier-c") ? (carrier !== "c") : (g !== foil);
+    });
+  }
+
+  function select(btn) {
+    foil = btn.dataset.foil;
+    card.dataset.foil = foil;
+    tabs.forEach(function (x) { x.setAttribute("aria-pressed", String(x === btn)); });
+    // 清掉別種材質留下的 inline 數值（--soften / --sweep 同名但意義不同）
+    document.querySelectorAll("[data-show]").forEach(function (el) {
+      if (el.dataset.show !== "carrier-c" && el.dataset.show !== foil) {
+        el.querySelectorAll("input[data-var]").forEach(function (s) {
+          card.style.removeProperty(s.dataset.var);
+        });
+      }
+    });
+    syncPanel();
+    document.querySelectorAll("[data-show]:not([hidden]) input[data-var]").forEach(apply);
+    if (always.checked) api.setAlways(true);
+    api.sweep(2.4);
+  }
+  tabs.forEach(function (b) { b.addEventListener("click", function () { select(b); }); });
+
+  /* ---------- 按鈕 ---------- */
+
+  document.getElementById("btnSweep").addEventListener("click", function () { api.sweep(4); });
+
+  // 重骰：換一組新的隨機方向給四層星圖
+  var OFFSET_VARS = ["--ox1","--oy1","--ox2","--oy2","--ox3","--oy3","--ox4","--oy4"];
+  document.getElementById("btnShuffle").addEventListener("click", function () {
+    OFFSET_VARS.forEach(function (v) {
+      card.style.setProperty(v, Math.random().toFixed(3));
+    });
+    api.sweep(1.6);
+  });
+
+  document.getElementById("btnReset").addEventListener("click", function () {
+    sliders.forEach(function (s) { s.value = defaults[s.dataset.var]; apply(s); });
+    tilt.value = 14; applyTilt();
+    blend.value = "color-dodge"; card.style.setProperty("--blend", "color-dodge");
+    always.checked = false; api.setAlways(false);
+    OFFSET_VARS.forEach(function (v) { card.style.removeProperty(v); });
+    setCarrier(carrier);
+  });
+
+  document.getElementById("btnCopy").addEventListener("click", function () {
+    var lines = ['.foil[data-foil="' + foil + '"] {'];
+    document.querySelectorAll("[data-show]:not([hidden]) input[data-var]").forEach(function (s) {
+      lines.push("  " + s.dataset.var + ": " + s.value + (s.dataset.unit || "") + ";");
+    });
+    lines.push("  --blend: " + blend.value + ";");
+    lines.push("}");
+    lines.push('/* 載體： data-carrier="' + carrier + '" · 傾斜： data-tilt="' + tilt.value + '" */');
+    var css = lines.join("\n");
+    out.textContent = css;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(css).then(function () {
+        out.textContent = "已複製到剪貼簿\n\n" + css;
+      }, function () {});
+    }
+  });
+
+  /* ======================================================================
+     PNG 輸出
+
+     把卡片複製一份，用 getComputedStyle 把「算完的樣式」逐條寫進複製品
+     （含 ::before / ::after），塞進 SVG 的 foreignObject，讓瀏覽器自己畫成圖。
+
+     不用 canvas 重畫：mix-blend-mode / background-blend-mode / filter / mask
+     都是排版期才算的，重畫等於整套效果再寫一遍，以後改 CSS 兩邊就對不上。
+     不整包塞 holo.css：file:// 開檔時瀏覽器不准 JS 讀外部 CSS，
+     但 getComputedStyle 永遠能用。
+     ====================================================================== */
+
+  function cssTextOf(cs) {
+    var o = [];
+    for (var i = 0; i < cs.length; i++) {
+      var prop = cs[i], val = cs.getPropertyValue(prop);
+      if (val) o.push(prop + ":" + val + ";");
+    }
+    return o.join("");
+  }
+
+  function serializeCard(root) {
+    var clone = root.cloneNode(true);
+    var css = [];
+    var sw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    var dw = document.createTreeWalker(clone, NodeFilter.SHOW_ELEMENT);
+    var s = root, d = clone, n = 0;
+    while (s && d) {
+      n++;
+      var cls = "hx" + n;
+      d.setAttribute("class", cls);
+      d.removeAttribute("id");
+      d.removeAttribute("style");
+      css.push("." + cls + "{" + cssTextOf(getComputedStyle(s)) + "}");
+      ["::before", "::after"].forEach(function (pe) {
+        var cs = getComputedStyle(s, pe);
+        if (cs.content && cs.content !== "none") {
+          css.push("." + cls + pe + "{" + cssTextOf(cs) + "}");
+        }
+      });
+      s = sw.nextNode(); d = dw.nextNode();
+    }
+    css.push(".hx1{margin:0!important;position:static!important;}");
+    return { html: new XMLSerializer().serializeToString(clone), css: css.join("\n") };
+  }
+
+  var exScale = document.getElementById("exScale");
+  var exBare  = document.getElementById("exBare");
+  var exTilt  = document.getElementById("exTilt");
+  var exNote  = document.getElementById("exNote");
+
+  document.getElementById("btnPng").addEventListener("click", function () {
+    var w = card.offsetWidth, h = card.offsetHeight;
+    var sel = exScale.value;
+    var scale = (sel > 10) ? (sel / w) : Number(sel);   // 尺寸預設值指的是「卡片本身」的寬度
+
+    var tiltEl = card.querySelector(".foil__tilt");
+    var artEl  = card.querySelector(".foil__art");
+    var keep = {
+      rx: card.style.getPropertyValue("--rx"),
+      ry: card.style.getPropertyValue("--ry"),
+      shadow: tiltEl.style.boxShadow,
+      artDisplay: artEl.style.display
+    };
+    if (!exTilt.checked) {
+      card.style.setProperty("--rx", "0deg");
+      card.style.setProperty("--ry", "0deg");
+    }
+    tiltEl.style.boxShadow = "none";   // 厚度／陰影會被畫布邊界切掉，一律不拍
+    if (exBare.checked) artEl.style.display = "none";
+
+    /* 卡片一傾斜，它的實際外框就會比版面大（角會凸出去）。
+       畫布如果只切成版面大小，那幾個角就會被切掉。
+       所以在這裡量「傾斜後的真實外框」跟版面差多少，當作四邊的留白。
+       沒傾斜時量出來是 0，行為跟以前一樣。 */
+    var boxRect  = card.getBoundingClientRect();
+    var tiltRect = tiltEl.getBoundingClientRect();
+    var pad = Math.ceil(Math.max(
+      boxRect.left - tiltRect.left,
+      tiltRect.right - boxRect.right,
+      boxRect.top - tiltRect.top,
+      tiltRect.bottom - boxRect.bottom,
+      0
+    )) + 2;                                   // +2 當安全邊
+    var cw = w + pad * 2, ch = h + pad * 2;
+    var outW = Math.round(cw * scale), outH = Math.round(ch * scale);
+
+    var snap = serializeCard(card);
+
+    card.style.setProperty("--rx", keep.rx);
+    card.style.setProperty("--ry", keep.ry);
+    tiltEl.style.boxShadow = keep.shadow;
+    artEl.style.display = keep.artDisplay;
+
+    var svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="' + outW + '" height="' + outH + '">' +
+        '<foreignObject x="0" y="0" width="' + outW + '" height="' + outH + '">' +
+          '<div xmlns="http://www.w3.org/1999/xhtml" style="width:' + cw + 'px;height:' + ch +
+               'px;padding:' + pad + 'px;box-sizing:border-box;' +
+               'transform:scale(' + scale + ');transform-origin:0 0;">' +
+            "<style>" + snap.css + "</style>" + snap.html +
+          "</div>" +
+        "</foreignObject>" +
+      "</svg>";
+
+    var img = new Image();
+    img.onload = function () {
+      var cv = document.createElement("canvas");
+      cv.width = outW; cv.height = outH;
+      cv.getContext("2d").drawImage(img, 0, 0);
+      cv.toBlob(function (blob) {
+        if (!blob) { exNote.textContent = "輸出失敗：畫布是空的。"; return; }
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "holo-" + carrier + "-" + foil + (exBare.checked ? "-bare" : "") +
+                     "-" + outW + "x" + outH + ".png";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        exNote.textContent = "已輸出 " + outW + "×" + outH + " PNG（" +
+          Math.round(blob.size / 1024) + " KB）" +
+          (pad > 2 ? "，四邊自動留白 " + pad + "px 以免傾斜的角被切掉。" : "。");
+      }, "image/png");
+    };
+    img.onerror = function () {
+      exNote.textContent = "輸出失敗。先把輸出尺寸調小試試；還是不行的話，" +
+        "改用 http 開這個頁面（在資料夾裡跑一個本機伺服器）通常就會過。";
+    };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  });
+
+  setCarrier("a");
+  syncPanel();
+  setTimeout(function () { api.sweep(4); }, 350);
+})();
+</script>
+
+</body>
+</html>

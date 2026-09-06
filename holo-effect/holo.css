@@ -1,0 +1,732 @@
+/* ==========================================================================
+   holo.css — 全息閃卡材質
+   Bay (3x3) Studio / 2026-09-06
+   從零手刻。無第三方程式碼、無外部圖檔、無任何依賴。
+   --------------------------------------------------------------------------
+   用法：
+
+     <div class="foil" data-foil="grid">
+       <div class="foil__tilt">
+         <div class="foil__art"><img src="底圖.png" alt=""></div>
+         <div class="foil__sheen"></div>
+         <div class="foil__gloss"></div>
+         <div class="foil__over"><img src="上層透明圖.png" alt=""></div>
+       </div>
+     </div>
+
+   .foil__over 是選用的：貼在最上層，透明的地方會透出下面的閃光。
+   不需要的話整個 div 拿掉即可。
+
+   data-foil    可填 "rainbow"（經典彩虹）／ "grid"（方閃）／ "glitter"（碎閃）
+   data-carrier 可填 "a"（正方形貼紙）／ "b"（塔羅牌）／ "c"（寶可夢卡）—— 決定比例、圓角、厚度
+   ========================================================================== */
+
+
+/* --------------------------------------------------------------------------
+   1. 卡片外殼 + 所有可調參數
+   -------------------------------------------------------------------------- */
+
+.foil {
+
+  /* ---- 尺寸 ---- */
+  --card-w:       300px;
+  --card-ratio:   0.583;   /* 塔羅牌 70×120mm。寶可夢卡是 0.716 */
+  --card-radius:  3.4% / 2%;
+
+  /* ---- 以下八個由 holo.js 即時寫入，沒有 JS 也不會壞 ---- */
+  --px:  50%;    /* 指標在卡上的 X 位置 */
+  --py:  50%;    /* 指標在卡上的 Y 位置 */
+  --fx:  0.5;    /* 同上，換成 0~1 */
+  --fy:  0.5;
+  --fc:  0;      /* 指標離卡片中心多遠 0~1 */
+  --rx:  0deg;   /* 左右傾斜 */
+  --ry:  0deg;   /* 上下傾斜 */
+  --on:  0;      /* 亮起程度 0~1 */
+
+  /* ---- 全域可調 ---- */
+  --power:      1;             /* 閃光總強度 */
+  --bright:     0.62;          /* 亮度 */
+  --contrast:   1.8;           /* 對比：越高色帶越硬 */
+  --sat:        1.25;          /* 飽和 */
+  --blend:      color-dodge;   /* 疊到底圖的混合模式 */
+  --gloss:      0.62;          /* 白色反光強度 */
+  --gloss-size: 62%;           /* 白色反光範圍 */
+
+  /* ---- 內部推導：指標離中心的偏移量，給背景位移用 ---- */
+  --shift-x: calc((var(--fx) - 0.5) * 100%);
+  --shift-y: calc((var(--fy) - 0.5) * 100%);
+
+  width: var(--card-w);
+  aspect-ratio: var(--card-ratio);
+  border-radius: var(--card-radius);
+  perspective: 900px;
+  isolation: isolate;
+}
+
+.foil__tilt {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  isolation: isolate;
+  transform: rotateY(var(--rx)) rotateX(var(--ry));
+  box-shadow:
+    0 14px 28px -12px hsl(0 0% 0% / 0.75),
+    0 2px 10px -4px hsl(0 0% 0% / 0.55);
+  transition: box-shadow 0.35s ease;
+}
+
+.foil.is-lit .foil__tilt {
+  box-shadow:
+    0 0 2px 0 hsl(0 0% 100% / 0.7),
+    0 0 16px 1px hsl(190 90% 70% / 0.35),
+    0 18px 34px -12px hsl(0 0% 0% / 0.8);
+}
+
+/* 三層全部疊在同一格 */
+.foil__tilt > * {
+  position: relative;
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.foil__art { z-index: 1; }
+
+.foil__art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+/* 第二層：彩虹 / 方閃本體 */
+.foil__sheen {
+  z-index: 2;
+  background-repeat: repeat;
+  opacity: calc(var(--on) * var(--power));
+  mix-blend-mode: var(--blend);
+  will-change: background-position, filter, opacity;
+}
+
+.foil__sheen::before,
+.foil__sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+/* 第四層（選用）：貼在最上層的圖。透明處會透出下面的閃光 */
+.foil__over {
+  z-index: 4;
+  pointer-events: none;
+}
+
+.foil__over img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+/* 第三層：白色反光（三種材質共用） */
+.foil__gloss {
+  z-index: 3;
+  opacity: calc(var(--on) * var(--gloss));
+  mix-blend-mode: overlay;
+  background-image: radial-gradient(
+    farthest-corner circle at var(--px) var(--py),
+    hsl(0 0% 100% / 0.9) 8%,
+    hsl(0 0% 100% / 0.55) 22%,
+    hsl(0 0% 0% / 0.6) var(--gloss-size),
+    hsl(0 0% 0% / 0.75) 110%
+  );
+  filter: brightness(0.85) contrast(1.4);
+  will-change: background-image, opacity;
+}
+
+
+/* --------------------------------------------------------------------------
+   1b. 載體預設 — 在 .foil 上加 data-carrier="a" | "b" | "c"
+
+     A 正方形貼紙 — 1:1，薄片，沒有厚度
+     B 塔羅牌     — 3:5，圓角，側面看得到紙的厚度
+     C 寶可夢卡   — 0.716，一般卡牌厚度
+   -------------------------------------------------------------------------- */
+
+.foil {
+  /* 卡緣（厚度）的偏移量，完全由傾斜決定。
+     ⚠️ 這裡絕對不能加固定的向下偏移 —— 加了的話卡片正對鏡頭、完全沒傾斜時，
+        下緣還是會硬生生多一條淺色橫帶，看起來像遮罩歪掉。
+        真的卡片正面看本來就看不到側面。 */
+  --ex: calc((var(--fx) - 0.5) * -16px);
+  --ey: calc((var(--fy) - 0.5) * -11px);
+}
+
+
+/* ---- A：正方形貼紙。薄片，只有一點接觸陰影，沒有側邊 ---- */
+
+.foil[data-carrier="a"] {
+  --card-ratio:  1;
+  --card-radius: 1.5%;
+}
+
+.foil[data-carrier="a"] .foil__tilt {
+  box-shadow:
+    0 1px 2px hsl(0 0% 0% / 0.4),
+    0 5px 12px -7px hsl(0 0% 0% / 0.6);
+}
+
+.foil[data-carrier="a"].is-lit .foil__tilt {
+  box-shadow:
+    0 0 1px hsl(0 0% 100% / 0.55),
+    0 1px 2px hsl(0 0% 0% / 0.4),
+    0 0 14px -2px hsl(190 90% 70% / 0.3),
+    0 6px 16px -8px hsl(0 0% 0% / 0.65);
+}
+
+
+/* ---- B：塔羅牌。3:5，圓角，堆出紙的厚度 ---- */
+
+.foil[data-carrier="b"] {
+  --card-ratio:  0.6;
+  --card-radius: 3.6% / 2.2%;
+}
+
+.foil[data-carrier="b"] .foil__tilt {
+  box-shadow:
+    inset 0  1px 0 hsl(0 0% 100% / 0.32),
+    inset 0 -1px 0 hsl(0 0% 0% / 0.32),
+    calc(var(--ex) * 0.22) calc(var(--ey) * 0.22) 0 hsl(42 24% 84%),
+    calc(var(--ex) * 0.45) calc(var(--ey) * 0.45) 0 hsl(42 20% 72%),
+    calc(var(--ex) * 0.68) calc(var(--ey) * 0.68) 0 hsl(42 17% 58%),
+    calc(var(--ex) * 0.88) calc(var(--ey) * 0.88) 0 hsl(42 14% 45%),
+    calc(var(--ex) * 1.00) calc(var(--ey) * 1.00) 0 hsl(42 11% 33%),
+    0 16px 26px -8px hsl(0 0% 0% / 0.8);
+}
+
+.foil[data-carrier="b"].is-lit .foil__tilt {
+  box-shadow:
+    inset 0  1px 0 hsl(0 0% 100% / 0.42),
+    inset 0 -1px 0 hsl(0 0% 0% / 0.32),
+    calc(var(--ex) * 0.22) calc(var(--ey) * 0.22) 0 hsl(42 28% 89%),
+    calc(var(--ex) * 0.45) calc(var(--ey) * 0.45) 0 hsl(42 22% 76%),
+    calc(var(--ex) * 0.68) calc(var(--ey) * 0.68) 0 hsl(42 19% 61%),
+    calc(var(--ex) * 0.88) calc(var(--ey) * 0.88) 0 hsl(42 15% 47%),
+    calc(var(--ex) * 1.00) calc(var(--ey) * 1.00) 0 hsl(42 11% 34%),
+    0 0 18px 1px hsl(190 90% 70% / 0.32),
+    0 18px 30px -8px hsl(0 0% 0% / 0.82);
+}
+
+
+/* ---- C：寶可夢卡。一般卡牌厚度 ---- */
+
+.foil[data-carrier="c"] {
+  --card-ratio:  0.716;
+  --card-radius: 4.4% / 3.1%;
+}
+
+.foil[data-carrier="c"] .foil__tilt {
+  box-shadow:
+    calc(var(--ex) * 0.38) calc(var(--ey) * 0.38) 0 hsl(45 28% 84%),
+    calc(var(--ex) * 0.72) calc(var(--ey) * 0.72) 0 hsl(45 19% 60%),
+    calc(var(--ex) * 1.00) calc(var(--ey) * 1.00) 0 hsl(45 13% 40%),
+    0 14px 26px -10px hsl(0 0% 0% / 0.78);
+}
+
+.foil[data-carrier="c"].is-lit .foil__tilt {
+  box-shadow:
+    calc(var(--ex) * 0.38) calc(var(--ey) * 0.38) 0 hsl(45 32% 88%),
+    calc(var(--ex) * 0.72) calc(var(--ey) * 0.72) 0 hsl(45 21% 64%),
+    calc(var(--ex) * 1.00) calc(var(--ey) * 1.00) 0 hsl(45 13% 42%),
+    0 0 18px 1px hsl(190 90% 70% / 0.34),
+    0 18px 30px -10px hsl(0 0% 0% / 0.8);
+}
+
+
+/* --------------------------------------------------------------------------
+   2. 材質 A — 經典彩虹（斜向彩虹帶 + 細掃描線 + 光柱）
+   -------------------------------------------------------------------------- */
+
+/* 參數放在最外層，這樣外面用 inline style 就能直接蓋掉 */
+.foil[data-foil="rainbow"] {
+  --angle:  118deg;   /* 彩虹傾斜角 */
+  --spread: 400%;     /* 彩虹密度：越小色帶越細 */
+  --line:   1.4px;    /* 掃描線間距 */
+  --reach:  1.7;      /* 炫彩範圍：亮起來的那一圈鋪多遠。調小 = 只有游標附近亮 */
+}
+
+.foil[data-foil="rainbow"] .foil__sheen {
+
+  background-image:
+    /* 上層：細掃描線 */
+    repeating-linear-gradient(90deg,
+      hsl(0 0% 0%)  0 var(--line),
+      hsl(0 0% 74%) var(--line) calc(var(--line) * 2)),
+    /* 下層：無限循環的彩虹帶 */
+    repeating-linear-gradient(var(--angle),
+      hsl(348 96% 63%)   0%,
+      hsl(38  98% 62%)   3.5%,
+      hsl(92  86% 58%)   7%,
+      hsl(172 92% 62%)   10.5%,
+      hsl(214 98% 66%)   14%,
+      hsl(288 92% 66%)   17.5%,
+      hsl(348 96% 63%)   21%);
+
+  background-blend-mode: overlay;
+
+  /* ⚠️ 彩虹帶不能平鋪：斜的漸層在磁磚邊界對不起來，
+     滑到最左/最右時會出現一條直線接縫。掃描線是垂直的，平鋪沒問題。 */
+  background-repeat: repeat, no-repeat;
+
+  background-size: auto, var(--spread) var(--spread);
+
+  /* 乘數必須 ≤ 1，位置才鎖在 0%~100%，圖才不會被推出邊界露出空隙 */
+  background-position:
+    0 0,
+    calc(50% + var(--shift-x) * -0.92) calc(50% + var(--shift-y) * -0.92);
+
+  filter:
+    brightness(var(--bright))
+    contrast(var(--contrast))
+    saturate(var(--sat));
+}
+
+/* 斜向光柱：跟著指標橫移，模擬印刷網點的方向性 */
+.foil[data-foil="rainbow"] .foil__sheen::before {
+  background-image: repeating-linear-gradient(97deg,
+    hsl(0 0% 0%)   0%      2.67%,
+    hsl(0 0% 62%)  4%,
+    hsl(0 0% 0%)   6%      12.67%);
+  background-repeat: no-repeat;
+  background-size: 300% 100%;
+  background-position: calc(50% + var(--shift-x) * -0.92) 0;
+  mix-blend-mode: color-dodge;
+  filter: brightness(1.05) contrast(1.15);
+  opacity: 0.5;
+}
+
+/* 指標熱點：控制「哪一塊真的亮起來」。
+   ⚠️ 這層才是彩虹看起來範圍大不大的關鍵 —— 它用 luminosity 把圈外壓黑，
+      所以色帶再寬，圈太小的話還是只會亮中間一小塊。--reach 就是在調這個圈。 */
+.foil[data-foil="rainbow"] .foil__sheen::after {
+  background-image: radial-gradient(
+    farthest-corner circle at var(--px) var(--py),
+    hsl(0 0% 92% / 0.85) 0%,
+    hsl(0 0% 62% / 0.18) calc(28% * var(--reach)),
+    hsl(0 0% 0%)         calc(82% * var(--reach)));
+  mix-blend-mode: luminosity;
+  filter: brightness(0.62) contrast(3.4);
+}
+
+
+/* --------------------------------------------------------------------------
+   3. 材質 B — 方閃（日系復古方格全息貼紙）
+   結構：每格內嵌 CD 同心彩虹環 → 疊 45 度斜切明暗 → 再壓格線
+   -------------------------------------------------------------------------- */
+
+/* 參數放在最外層，這樣外面用 inline style 就能直接蓋掉 */
+.foil[data-foil="grid"] {
+  --sq:     25.3px; /* 方格大小 */
+  --fan:    62deg;  /* 放射密度：轉幾度算一段完整光譜。越小放射臂越多 */
+  --spin:   200deg; /* 放射轉動：滑動時整組扇形轉多少 */
+  --laser:  1.05;   /* 雷射感：色彩濃度，調高越像光碟繞射 */
+  --soften: 0.58;   /* 過渡柔順度：壓低這層的對比，光譜才不會被壓成一塊一塊的色塊 */
+  --disc:   0.40;   /* 碟面大小：CD 佔方格的比例。調到 0.72 以上就填滿整格 */
+  --ring:   3px;    /* 溝紋間距（光碟表面那圈細紋） */
+  --groove: 0.3;    /* 溝紋強度。0 = 完全沒有同心圓，只剩放射 */
+  --core:   0.5;    /* 光碟中心那個洞的大小，0 = 沒有洞 */
+  --bevel:  0.9;    /* 45 度斜切明暗對比 */
+  --seam:   1px;    /* 格線粗細 */
+  --sweep:  280deg; /* 滑動時色相整體掃過的幅度 */
+
+  /* 銀塊：蓋在左上 + 右下兩塊的普通金屬反光（沒有 CD 放射）*/
+  --metal:        0.92; /* 銀塊強度。0 = 整格都是 CD，1 = 完全蓋住 */
+  --metal-bright: 0.95; /* 銀塊亮度 */
+}
+
+.foil[data-foil="grid"] .foil__sheen {
+
+  background-image:
+
+    /* (0) 大範圍色彩分區：讓不同區域的方格閃不同顏色，不會整片同色。
+           （原本住在 ::before，為了把 ::before 讓給銀塊而搬進來，
+             透明度 0.5 直接寫進顏色裡） */
+    linear-gradient(
+      calc(58deg + (var(--fy) - 0.5) * 90deg),
+      hsl(345 90% 62% / 0.5)  0%,
+      hsl(45  92% 62% / 0.5)  18%,
+      hsl(120 80% 58% / 0.5)  36%,
+      hsl(185 88% 62% / 0.5)  54%,
+      hsl(232 92% 66% / 0.5)  72%,
+      hsl(300 88% 64% / 0.5)  88%,
+      hsl(345 90% 62% / 0.5)  100%),
+
+    /* (1) 直向格線 */
+    repeating-linear-gradient(90deg,
+      hsl(0 0% 0%)   0 var(--seam),
+      hsl(0 0% 100%) var(--seam) var(--sq)),
+
+    /* (2) 橫向格線 */
+    repeating-linear-gradient(0deg,
+      hsl(0 0% 0%)   0 var(--seam),
+      hsl(0 0% 100%) var(--seam) var(--sq)),
+
+    /* (3) 45 度斜切面：每格有一條亮 → 暗 → 亮的對角線 */
+    linear-gradient(45deg,
+      hsl(0 0% 78% / calc(var(--bevel) * 0.9))  0%,
+      hsl(0 0% 58% / calc(var(--bevel) * 0.5))  30%,
+      hsl(0 0% 4%  / 0.92)                      50%,
+      hsl(0 0% 58% / calc(var(--bevel) * 0.5))  70%,
+      hsl(0 0% 78% / calc(var(--bevel) * 0.9))  100%),
+
+    /* (4) 碟形：把每格的彩虹收成一個圓盤 —— 中心留洞、四角壓暗。
+           少了這層，扇形會填滿整個方格，看起來就變成四個三角形而不是一張 CD */
+    radial-gradient(circle at 50% 50%,
+      hsl(0 0% 0%)   0,
+      hsl(0 0% 0%)   calc(var(--sq) * var(--core) * 0.055),
+      hsl(0 0% 100%) calc(var(--sq) * var(--core) * 0.20),
+      hsl(0 0% 100%) calc(var(--sq) * var(--disc) * 0.86),
+      hsl(0 0% 10%)  calc(var(--sq) * var(--disc) * 1.34),
+      hsl(0 0% 10%)  100%),
+
+    /* (5) 溝紋：很細的同心環，只留一點點當光碟表面的紋理。
+           --groove 調 0 就完全沒有同心圓，只剩放射 */
+    repeating-radial-gradient(circle at 50% 50%,
+      hsl(0 0% 44% / var(--groove)) 0,
+      hsl(0 0% 84% / var(--groove)) calc(var(--ring) * 0.5),
+      hsl(0 0% 44% / var(--groove)) var(--ring)),
+
+    /* (6) CD 放射光譜 ← 這層才是「放射」的本體。
+           conic 是繞著圓心「照角度」變色，所以顏色是從中心散出去的扇形，
+           不是一圈一圈的同心圓（那是 radial 幹的事）。
+           起始角跟著指標轉，扇形就會像真的光碟那樣掃過去。 */
+    repeating-conic-gradient(
+      from calc(17deg + (var(--fx) - 0.5) * var(--spin)) at 50% 50%,
+      hsl(  0 90% 58%) 0deg,
+      hsl( 15 90% 58%) calc(var(--fan) * 0.0417),
+      hsl( 30 90% 58%) calc(var(--fan) * 0.0833),
+      hsl( 45 90% 58%) calc(var(--fan) * 0.1250),
+      hsl( 60 90% 58%) calc(var(--fan) * 0.1667),
+      hsl( 75 90% 58%) calc(var(--fan) * 0.2083),
+      hsl( 90 90% 58%) calc(var(--fan) * 0.2500),
+      hsl(105 90% 58%) calc(var(--fan) * 0.2917),
+      hsl(120 90% 58%) calc(var(--fan) * 0.3333),
+      hsl(135 90% 58%) calc(var(--fan) * 0.3750),
+      hsl(150 90% 58%) calc(var(--fan) * 0.4167),
+      hsl(165 90% 58%) calc(var(--fan) * 0.4583),
+      hsl(180 90% 58%) calc(var(--fan) * 0.5000),
+      hsl(195 90% 58%) calc(var(--fan) * 0.5417),
+      hsl(210 90% 58%) calc(var(--fan) * 0.5833),
+      hsl(225 90% 58%) calc(var(--fan) * 0.6250),
+      hsl(240 90% 58%) calc(var(--fan) * 0.6667),
+      hsl(255 90% 58%) calc(var(--fan) * 0.7083),
+      hsl(270 90% 58%) calc(var(--fan) * 0.7500),
+      hsl(285 90% 58%) calc(var(--fan) * 0.7917),
+      hsl(300 90% 58%) calc(var(--fan) * 0.8333),
+      hsl(315 90% 58%) calc(var(--fan) * 0.8750),
+      hsl(330 90% 58%) calc(var(--fan) * 0.9167),
+      hsl(345 90% 58%) calc(var(--fan) * 0.9583),
+      hsl(360 90% 58%) var(--fan));
+
+  /* 順序要跟上面 background-image 的 (0)~(6) 一一對齊，錯位整片就毀了：
+     色彩分區 / 格線 / 格線 / 斜切面 / 暗芯 / 溝紋 / 放射光譜 */
+  background-blend-mode: overlay, multiply, multiply, hard-light, multiply, overlay, normal;
+
+  /* ⚠️ 色彩分區那層一定要 no-repeat。
+     斜向的漸層一旦平鋪，磁磚左右邊界的顏色對不起來 → 滑到最左/最右時
+     那條接縫會被推進畫面，變成一條肉眼看得見的直線斷層。
+     格子那幾層是規律圖案，平鋪本來就接得上，維持 repeat。 */
+  background-repeat:
+    no-repeat, repeat, repeat, repeat, repeat, repeat, repeat;
+
+  background-size:
+    300% 300%,
+    var(--sq) var(--sq),
+    var(--sq) var(--sq),
+    var(--sq) var(--sq),
+    var(--sq) var(--sq),
+    var(--sq) var(--sq),
+    var(--sq) var(--sq);
+
+  /* 整片隨指標微幅位移，方格才有「跟著轉」的錯覺。
+     暗芯 / 溝紋 / 放射要同步，不然芯會跑出圓心。
+
+     色彩分區那層的乘數必須 ≤ 1，位置才會鎖在 0%~100% 之間。
+     超過 1 的話圖會被推出邊界露出空隙（no-repeat 之後就是破洞）。 */
+  background-position:
+    calc(50% + var(--shift-x) * -0.92) calc(50% + var(--shift-y) * -0.92),
+    calc(var(--shift-x) * 0.05) calc(var(--shift-y) * 0.05),
+    calc(var(--shift-x) * 0.05) calc(var(--shift-y) * 0.05),
+    calc(var(--shift-x) * 0.09) calc(var(--shift-y) * 0.09),
+    calc(var(--shift-x) * 0.14) calc(var(--shift-y) * 0.14),
+    calc(var(--shift-x) * 0.14) calc(var(--shift-y) * 0.14),
+    calc(var(--shift-x) * 0.14) calc(var(--shift-y) * 0.14);
+
+  /* 這行是方閃的靈魂：滑動時整片色相掃過去。
+     ⚠️ contrast 要乘 --soften 壓低：對比開太高會把平滑的光譜壓成一塊一塊的純色，
+        看起來就像被切塊。放射的過渡順不順，這個乘數比停點數量還關鍵。 */
+  filter:
+    hue-rotate(calc((var(--fx) - 0.5) * var(--sweep)))
+    saturate(var(--laser))
+    brightness(var(--bright))
+    contrast(calc(var(--contrast) * var(--soften)))
+    saturate(var(--sat));
+}
+
+/* 銀塊：把每格切成十字四等分，只蓋住「左上 + 右下」兩塊，
+   蓋上去的是單純的金屬掃光，沒有 CD 放射。
+   剩下的「右上 + 左下」維持底下那層的放射 CD，形成對角交錯。
+
+   關鍵是 mask-image 那個 conic：從 12 點鐘順時針算，
+   0~90 度 = 右上、90~180 = 右下、180~270 = 左下、270~360 = 左上。
+   透明的地方 = 銀塊不蓋 = 露出 CD。 */
+.foil[data-foil="grid"] .foil__sheen::before {
+
+  background-image:
+
+    /* 格線也要在銀塊上重畫一次，不然這兩格的格線會被蓋掉 */
+    repeating-linear-gradient(90deg,
+      hsl(0 0% 0%)   0 var(--seam),
+      hsl(0 0% 100%) var(--seam) var(--sq)),
+    repeating-linear-gradient(0deg,
+      hsl(0 0% 0%)   0 var(--seam),
+      hsl(0 0% 100%) var(--seam) var(--sq)),
+
+    /* 45 度斜切面照留，兩種格子的立體感才一致 */
+    linear-gradient(45deg,
+      hsl(0 0% 82% / calc(var(--bevel) * 0.85)) 0%,
+      hsl(0 0% 60% / calc(var(--bevel) * 0.45)) 30%,
+      hsl(0 0% 6%  / 0.9)                       50%,
+      hsl(0 0% 60% / calc(var(--bevel) * 0.45)) 70%,
+      hsl(0 0% 82% / calc(var(--bevel) * 0.85)) 100%),
+
+    /* 銀色金屬掃光：只有明暗，沒有彩虹。跟著指標轉，才有拋光金屬的味道 */
+    linear-gradient(
+      calc(118deg + (var(--fx) - 0.5) * 70deg),
+      hsl(214 14% 22%)  4%,
+      hsl(208 16% 68%)  22%,
+      hsl(200 10% 94%)  38%,
+      hsl(206 14% 58%)  52%,
+      hsl(216 16% 24%)  68%,
+      hsl(204 12% 78%)  86%,
+      hsl(212 14% 34%)  100%);
+
+  background-blend-mode: multiply, multiply, hard-light, normal;
+
+  /* 金屬掃光是斜向漸層，同樣不能平鋪，否則兩側會出現直線接縫 */
+  background-repeat: repeat, repeat, repeat, no-repeat;
+
+  background-size:
+    var(--sq) var(--sq),
+    var(--sq) var(--sq),
+    var(--sq) var(--sq),
+    300% 300%;
+
+  background-position:
+    calc(var(--shift-x) * 0.05) calc(var(--shift-y) * 0.05),
+    calc(var(--shift-x) * 0.05) calc(var(--shift-y) * 0.05),
+    calc(var(--shift-x) * 0.09) calc(var(--shift-y) * 0.09),
+    calc(50% + var(--shift-x) * -0.92) calc(50% + var(--shift-y) * -0.92);
+
+  /* ↓ 十字遮罩：只留左上 + 右下 */
+  -webkit-mask-image: conic-gradient(from 0deg at 50% 50%,
+    transparent 0deg 90deg,
+    hsl(0 0% 0%) 90deg 180deg,
+    transparent 180deg 270deg,
+    hsl(0 0% 0%) 270deg 360deg);
+  mask-image: conic-gradient(from 0deg at 50% 50%,
+    transparent 0deg 90deg,
+    hsl(0 0% 0%) 90deg 180deg,
+    transparent 180deg 270deg,
+    hsl(0 0% 0%) 270deg 360deg);
+
+  /* 遮罩要跟格線同一個節奏，十字才會剛好落在格子中心 */
+  -webkit-mask-size: var(--sq) var(--sq);
+  mask-size: var(--sq) var(--sq);
+  -webkit-mask-position: calc(var(--shift-x) * 0.05) calc(var(--shift-y) * 0.05);
+  mask-position: calc(var(--shift-x) * 0.05) calc(var(--shift-y) * 0.05);
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+
+  filter: brightness(var(--metal-bright)) contrast(1.15) saturate(0.35);
+  opacity: var(--metal);
+}
+
+/* 指標熱點：貼紙被光打到的那一塊會亮起來（不要過曝到糊掉） */
+.foil[data-foil="grid"] .foil__sheen::after {
+  background-image: radial-gradient(
+    farthest-side circle at var(--px) var(--py),
+    hsl(0 0% 100% / 0.75) 0%,
+    hsl(0 0% 62%  / 0.16) 22%,
+    hsl(0 0% 0%)          62%);
+  mix-blend-mode: color-dodge;
+  filter: brightness(0.42) contrast(1.9);
+  opacity: calc(0.28 + var(--fc) * 0.22);
+}
+
+
+/* --------------------------------------------------------------------------
+   4. 材質 C — 碎閃（散落的 ✦ 星星，大大小小 + 前後景深錯位）
+
+   星星是用內嵌 SVG 畫的（data URI 直接寫在 CSS 裡），沒有任何外部圖檔。
+   四層星星從遠到近各有自己的位移速度 → 滑鼠一動就會錯開，產生深度。
+   顏色不是畫在星星上的：星星是黑底白圖，用 multiply 把底下那圈
+   「以指標為圓心的光譜」印上去，所以每顆星的顏色取決於它在畫面上的位置。
+   -------------------------------------------------------------------------- */
+
+.foil[data-foil="glitter"] {
+  --dust:     110px;  /* 碎片大小：整組星星的尺度。調大 = 顆粒變大變疏 */
+  --scatter:  1;      /* 散佈：四層星圖各自往自己的隨機方向錯開多少。0 = 全部對齊原點 */
+
+  /* 每層自己的隨機方向（0~1，代表往右／往下推該層磁磚的幾成）。
+     沒有這個的話四層都從同一個角落起算，疊起來會出現規律的「超級格子」。
+     調參台的「重骰位置」按鈕就是在改這八個數字。 */
+  --ox1: 0.37;  --oy1: 0.71;   /* 主角大星 */
+  --ox2: 0.82;  --oy2: 0.19;   /* 近景 */
+  --ox3: 0.14;  --oy3: 0.58;   /* 中景 */
+  --ox4: 0.63;  --oy4: 0.31;   /* 遠景 */
+  --depth:    1;      /* 景深錯位：前後層位移差多少。0 = 全部貼平沒有深度 */
+  --sparkle:  1.35;   /* 星星亮度 */
+  --iris:     340deg; /* 幻彩幅度：一圈光譜要轉幾度。調小 = 一個畫面好幾道彩虹 */
+  --sweep:    180deg; /* 滑動時色相整體掃過的幅度 */
+  --soften:   0.7;    /* 過渡柔順：壓低對比，顏色才不會被壓成色塊 */
+  --haze:     0.55;   /* 明暗分佈：讓碎閃有疏密感，不會整片一樣亮 */
+}
+
+.foil[data-foil="glitter"] .foil__sheen {
+
+  background-image:
+
+    /* (0) 幻彩底：以指標為圓心的光譜。星星的顏色全部從這裡來 */
+    repeating-conic-gradient(
+      from calc((var(--fx) - 0.5) * 200deg) at var(--px) var(--py),
+      hsl(  0 95% 60%) 0deg,
+      hsl( 15 95% 60%) calc(var(--iris) * 0.0417),
+      hsl( 30 95% 60%) calc(var(--iris) * 0.0833),
+      hsl( 45 95% 60%) calc(var(--iris) * 0.1250),
+      hsl( 60 95% 60%) calc(var(--iris) * 0.1667),
+      hsl( 75 95% 60%) calc(var(--iris) * 0.2083),
+      hsl( 90 95% 60%) calc(var(--iris) * 0.2500),
+      hsl(105 95% 60%) calc(var(--iris) * 0.2917),
+      hsl(120 95% 60%) calc(var(--iris) * 0.3333),
+      hsl(135 95% 60%) calc(var(--iris) * 0.3750),
+      hsl(150 95% 60%) calc(var(--iris) * 0.4167),
+      hsl(165 95% 60%) calc(var(--iris) * 0.4583),
+      hsl(180 95% 60%) calc(var(--iris) * 0.5000),
+      hsl(195 95% 60%) calc(var(--iris) * 0.5417),
+      hsl(210 95% 60%) calc(var(--iris) * 0.5833),
+      hsl(225 95% 60%) calc(var(--iris) * 0.6250),
+      hsl(240 95% 60%) calc(var(--iris) * 0.6667),
+      hsl(255 95% 60%) calc(var(--iris) * 0.7083),
+      hsl(270 95% 60%) calc(var(--iris) * 0.7500),
+      hsl(285 95% 60%) calc(var(--iris) * 0.7917),
+      hsl(300 95% 60%) calc(var(--iris) * 0.8333),
+      hsl(315 95% 60%) calc(var(--iris) * 0.8750),
+      hsl(330 95% 60%) calc(var(--iris) * 0.9167),
+      hsl(345 95% 60%) calc(var(--iris) * 0.9583),
+      hsl(360 95% 60%) var(--iris)),
+
+    /* (1) 最前景：少數幾顆大星 */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='black'/%3E%3Cg fill='white'%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(140.3,10.8) scale(0.1115) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(56.8,94.5) scale(0.1874) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(32.9,141.7) scale(0.1208) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(7.5,83.1) scale(0.2244) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(207.5,83.1) scale(0.2244) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(102.6,15.4) scale(0.1758) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(102.1,56.6) scale(0.1847) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(172.4,125.8) scale(0.2051) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(41.1,-4.5) scale(0.2234) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(41.1,195.5) scale(0.2234) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(159.6,44.8) scale(0.2169) translate(-50,-50)'/%3E%3C/g%3E%3C/svg%3E"),
+
+    /* (2) 近景 */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='black'/%3E%3Cg fill='gainsboro'%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(114.1,126.4) scale(0.2380) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(130.4,178.2) scale(0.2491) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(130.3,123.4) scale(0.2004) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(105.7,89.1) scale(0.2532) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(60.3,61.9) scale(0.1995) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(121.5,147.2) scale(0.1911) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(-14.4,111.1) scale(0.2218) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(185.6,111.1) scale(0.2218) translate(-50,-50)'/%3E%3C/g%3E%3C/svg%3E"),
+
+    /* (3) 中景 */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='black'/%3E%3Cg fill='silver'%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(-8.4,28.1) scale(0.1228) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(191.6,28.1) scale(0.1228) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(36.9,24.1) scale(0.1982) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(177.9,46.3) scale(0.2351) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(120.2,-13.6) scale(0.2022) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(120.2,186.4) scale(0.2022) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(141.6,9.7) scale(0.2258) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(141.6,209.7) scale(0.2258) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(62.1,38.0) scale(0.2220) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(-12.4,154.8) scale(0.2353) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(187.6,154.8) scale(0.2353) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(139.7,122.5) scale(0.1510) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(62.5,156.2) scale(0.2346) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(28.4,165.0) scale(0.2001) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(9.8,106.4) scale(0.1239) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(101.3,103.5) scale(0.1691) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(183.3,61.5) scale(0.1649) translate(-50,-50)'/%3E%3C/g%3E%3C/svg%3E"),
+
+    /* (4) 遠景：多而細碎 */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='black'/%3E%3Cg fill='gray'%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(90.5,112.0) scale(0.1924) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(101.6,117.5) scale(0.1185) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(126.0,158.6) scale(0.1094) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(18.1,161.9) scale(0.1693) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(-3.6,-7.0) scale(0.1654) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(-3.6,193.0) scale(0.1654) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(196.4,-7.0) scale(0.1654) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(196.4,193.0) scale(0.1654) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(31.5,3.0) scale(0.1528) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(31.5,203.0) scale(0.1528) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(38.0,48.4) scale(0.1030) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(88.1,168.5) scale(0.1519) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(100.0,132.5) scale(0.1457) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(-0.5,-0.9) scale(0.1840) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(-0.5,199.1) scale(0.1840) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(199.5,-0.9) scale(0.1840) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(199.5,199.1) scale(0.1840) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(63.1,45.9) scale(0.1289) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(153.3,80.1) scale(0.1847) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(191.6,169.5) scale(0.1001) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(182.1,94.0) scale(0.1980) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(14.6,125.9) scale(0.1779) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(17.4,66.5) scale(0.1964) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(23.6,49.3) scale(0.1101) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(159.4,35.5) scale(0.1559) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(38.1,146.4) scale(0.1131) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(23.3,84.2) scale(0.1213) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(-5.8,160.7) scale(0.1304) translate(-50,-50)'/%3E%3Cpath d='M50 3C54.5 34 66 45.5 97 50C66 54.5 54.5 66 50 97C45.5 66 34 54.5 3 50C34 45.5 45.5 34 50 3Z' transform='translate(194.2,160.7) scale(0.1304) translate(-50,-50)'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* 星星之間要用 lighten 疊（各層白點取聯集），
+     最後才用 multiply 把光譜印上去。順序弄錯會整片變黑。 */
+  background-blend-mode: multiply, lighten, lighten, lighten, normal;
+
+  /* 光譜那層跟著指標走、不平鋪；星圖是無縫磁磚，平鋪沒問題 */
+  background-repeat: no-repeat, repeat, repeat, repeat, repeat;
+
+  background-size:
+    100% 100%,
+    calc(var(--dust) * 3.40) calc(var(--dust) * 3.40),
+    calc(var(--dust) * 1.25) calc(var(--dust) * 1.25),
+    calc(var(--dust) * 0.75) calc(var(--dust) * 0.75),
+    calc(var(--dust) * 0.45) calc(var(--dust) * 0.45);
+
+  /* ↓ 景深就在這裡。
+     注意最前面那層（主角大星）刻意只有 -0.40，比後面的近景 -1.20 還小 ——
+     大顆星星跟著跑太兇會很吵，微微動就夠了，深度感交給後面三層。 */
+  /* 每層 = 視差位移 + 自己的隨機錯位（錯位量是「該層磁磚 × 隨機值 × 散佈」）*/
+  background-position:
+    0 0,
+    calc(var(--shift-x) * var(--depth) * -0.40 + var(--dust) * 3.40 * var(--ox1) * var(--scatter))
+    calc(var(--shift-y) * var(--depth) * -0.40 + var(--dust) * 3.40 * var(--oy1) * var(--scatter)),
+    calc(var(--shift-x) * var(--depth) * -1.20 + var(--dust) * 1.25 * var(--ox2) * var(--scatter))
+    calc(var(--shift-y) * var(--depth) * -1.20 + var(--dust) * 1.25 * var(--oy2) * var(--scatter)),
+    calc(var(--shift-x) * var(--depth) * -0.62 + var(--dust) * 0.75 * var(--ox3) * var(--scatter))
+    calc(var(--shift-y) * var(--depth) * -0.62 + var(--dust) * 0.75 * var(--oy3) * var(--scatter)),
+    calc(var(--shift-x) * var(--depth) * -0.26 + var(--dust) * 0.45 * var(--ox4) * var(--scatter))
+    calc(var(--shift-y) * var(--depth) * -0.26 + var(--dust) * 0.45 * var(--oy4) * var(--scatter));
+
+  filter:
+    hue-rotate(calc((var(--fx) - 0.5) * var(--sweep)))
+    brightness(calc(var(--bright) * var(--sparkle)))
+    contrast(calc(var(--contrast) * var(--soften)))
+    saturate(var(--sat));
+}
+
+/* 大範圍明暗：讓碎閃有疏密起伏，不會整片均勻像雜訊 */
+.foil[data-foil="glitter"] .foil__sheen::before {
+  background-image: radial-gradient(
+    farthest-corner circle at
+      calc(50% + (var(--fx) - 0.5) * -60%) calc(50% + (var(--fy) - 0.5) * -60%),
+    hsl(0 0% 100%) 0%,
+    hsl(0 0% 62%) 38%,
+    hsl(0 0% 18%) 88%);
+  background-repeat: no-repeat;
+  mix-blend-mode: multiply;
+  opacity: var(--haze);
+}
+
+/* 指標熱點：游標附近的碎片會爆一下 */
+.foil[data-foil="glitter"] .foil__sheen::after {
+  background-image: radial-gradient(
+    farthest-side circle at var(--px) var(--py),
+    hsl(0 0% 100% / 0.55) 0%,
+    hsl(0 0% 60% / 0.12) 24%,
+    hsl(0 0% 0%) 62%);
+  background-repeat: no-repeat;
+  mix-blend-mode: color-dodge;
+  filter: brightness(0.5) contrast(1.6);
+  opacity: calc(0.3 + var(--fc) * 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   5. 沒有 JS 時的退路：純 hover 也能動
+   -------------------------------------------------------------------------- */
+
+.foil:not(.js-on) .foil__tilt,
+.foil:not(.js-on) .foil__sheen,
+.foil:not(.js-on) .foil__gloss {
+  transition: all 0.35s ease;
+}
+
+.foil:not(.js-on):hover {
+  --on: 1;
+  --px: 32%;
+  --py: 22%;
+  --fx: 0.32;
+  --fy: 0.22;
+  --fc: 0.55;
+  --rx: -9deg;
+  --ry: 6deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .foil__tilt { transform: none; }
+}

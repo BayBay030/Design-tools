@@ -1,0 +1,1262 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>紙海報工作室 PaperPoster</title>
+<style>
+:root{
+  --bg:#0e0f12; --panel:#15171c; --panel2:#1b1e25; --line:#272b34;
+  --tx:#d7dae0; --tx2:#878e9b; --acc:#c9a227; --acc2:#e8d9a0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);
+  font:13px/1.5 "Inter","Segoe UI","Microsoft JhengHei",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow:hidden}
+#stage{position:fixed;inset:0 320px 0 0;overflow:hidden}
+.hnd{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.7);background:rgba(255,255,255,.12);
+  pointer-events:none;z-index:3;transition:transform .12s,background .12s,border-color .12s}
+.hnd.hot{transform:scale(1.35);background:rgba(232,217,160,.6);border-color:#e8d9a0}
+.hnd.on{background:rgba(201,162,39,.8);border-color:#e8d9a0}
+#gl{width:100%;height:100%;display:block;cursor:grab}
+#gl.drag{cursor:grabbing}
+#hint{position:fixed;left:18px;bottom:16px;color:var(--tx2);font-size:11.5px;
+  letter-spacing:.04em;pointer-events:none;user-select:none}
+#hint b{color:var(--tx);font-weight:500}
+
+/* ---------- panel ---------- */
+#panel{position:fixed;top:0;right:0;bottom:0;width:320px;background:var(--panel);
+  border-left:1px solid var(--line);display:flex;flex-direction:column;z-index:5}
+#crumb{white-space:nowrap;position:fixed;left:16px;top:14px;z-index:20;display:inline-flex;align-items:center;gap:6px;
+  padding:7px 12px 7px 10px;background:rgba(18,20,25,.82);-webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:7px;
+  color:var(--tx2);font-size:11.5px;letter-spacing:.03em;
+  text-decoration:none;transition:color .14s,background .14s,border-color .14s}
+#crumb:hover{color:var(--acc2);background:rgba(30,33,40,.94);border-color:#3a4150}
+#crumb:hover svg{transform:translateX(-2px)}
+#crumb svg{width:12px;height:12px;flex:0 0 12px;transition:transform .14s}
+#credit{padding:18px 14px 26px;text-align:center;color:#565e6b;font-size:10.5px;line-height:1.85;letter-spacing:.05em}
+#credit .cl{display:block;color:#68717f}
+#credit a{color:#68717f;text-decoration:none;transition:color .14s}
+#credit a:hover{color:var(--acc2)}
+#ph{display:flex;align-items:center;gap:8px;padding:14px 14px 12px;border-bottom:1px solid var(--line)}
+#ph .mark{width:16px;height:16px;flex:0 0 16px;color:var(--acc)}
+#ph .name{font-size:13.5px;font-weight:600;letter-spacing:.02em}
+#ph .ver{margin-left:auto;font-size:10.5px;color:var(--tx2);letter-spacing:.06em}
+#ph .hb{width:25px;height:25px;flex:0 0 25px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);border-radius:5px;background:var(--panel2);color:var(--tx2);
+  cursor:pointer;padding:0;transition:.14s}
+#ph .hb:hover:not([disabled]){color:var(--tx);border-color:#3a4150;background:#232833}
+#ph .hb[disabled]{opacity:.3;cursor:default}
+#ph .hb svg{width:13px;height:13px}
+#ctrls{flex:1;overflow-y:auto;overscroll-behavior:contain}
+#ctrls::-webkit-scrollbar{width:9px}
+#ctrls::-webkit-scrollbar-thumb{background:#2c313b;border-radius:9px;border:2px solid var(--panel)}
+#ctrls::-webkit-scrollbar-track{background:transparent}
+
+.sec{border-bottom:1px solid var(--line)}
+.sec>h3{margin:0;padding:11px 14px;font-size:12px;font-weight:600;letter-spacing:.03em;
+  display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;color:var(--tx)}
+.sec>h3:hover{background:var(--panel2)}
+.sec>h3 .chev{width:11px;height:11px;color:var(--tx2);transition:transform .18s ease;flex:0 0 11px}
+.sec.closed>h3 .chev{transform:rotate(-90deg)}
+.sec .body{padding:2px 14px 12px}
+.sec.closed .body{display:none}
+
+.row{display:flex;align-items:center;gap:8px;padding:4px 0;min-height:26px}
+.row>label{flex:1;color:var(--tx2);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .val{width:44px;text-align:right;font-variant-numeric:tabular-nums;font-size:11px;color:var(--tx)}
+.row input[type=range]{-webkit-appearance:none;appearance:none;flex:0 0 132px;width:132px;height:20px;background:transparent;margin:0}
+.row input[type=range]::-webkit-slider-runnable-track{height:3px;background:#2c313b;border-radius:3px}
+.row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;margin-top:-4px;
+  border-radius:50%;background:var(--acc2);border:none;cursor:pointer;transition:transform .1s}
+.row input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.18)}
+.row select{flex:1;min-width:0;background:var(--panel2);color:var(--tx);border:1px solid var(--line);
+  border-radius:5px;padding:4px 6px;font:inherit;font-size:11.5px;cursor:pointer;outline:none}
+.row select:hover{border-color:#39404d}
+.chk{position:relative;display:inline-flex;width:18px;height:18px;flex:0 0 18px;cursor:pointer}
+.chk input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.chk .box{width:18px;height:18px;border:1px solid var(--line);border-radius:4px;background:var(--panel2);
+  display:flex;align-items:center;justify-content:center;transition:background .14s,border-color .14s}
+.chk .box svg{width:11px;height:11px;color:#1a1508;opacity:0;transition:opacity .12s}
+.chk input:hover + .box{border-color:#3a4150}
+.chk input:checked + .box{background:var(--acc);border-color:var(--acc)}
+.chk input:checked + .box svg{opacity:1}
+.row input[type=color]{flex:0 0 34px;height:22px;padding:0;border:1px solid var(--line);
+  border-radius:5px;background:var(--panel2);cursor:pointer}
+.row.head{padding-top:9px}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:7px;
+  padding:8px 10px;background:var(--panel2);color:var(--tx);border:1px solid var(--line);
+  border-radius:6px;font:inherit;font-size:11.5px;cursor:pointer;transition:.14s}
+.btn:hover{background:#232833;border-color:#3a4150}
+.btn svg{width:13px;height:13px;flex:0 0 13px;color:var(--tx2)}
+.btn.primary{background:var(--acc);color:#1a1508;border-color:var(--acc);font-weight:600}
+.btn.primary:hover{background:var(--acc2)}
+.btn.primary svg{color:#1a1508}
+.btn2{display:flex;gap:7px}
+.btn2 .btn{margin-top:7px}
+.note{color:var(--tx2);font-size:10.5px;line-height:1.6;padding:6px 0 0}
+.filename{color:var(--acc2);font-size:10.5px;padding:5px 0 0;word-break:break-all}
+input[type=file]{display:none}
+#toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;
+  background:#1d2129;border:1px solid var(--line);color:var(--tx);padding:9px 16px;border-radius:8px;
+  font-size:12px;pointer-events:none;transition:.25s;z-index:20;margin-left:-160px}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="gl"></canvas></div>
+<div id="hint"><b>拖四角</b> 折角　<b>雙擊角</b> 攤平　<b>拖空白</b> 轉紙　<b>滾輪</b> 遠近　<b>右鍵拖</b> 移動　<b>Ctrl+Z</b> 復原</div>
+<a id="crumb" href="../index.html">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 5l-7 7 7 7"/>
+  </svg>小工具大幫手
+</a>
+<aside id="panel">
+  <div id="ph">
+    <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M5 12l14-2"/>
+    </svg>
+    <span class="name">紙海報工作室</span><span class="ver">v1</span>
+    <button class="hb" id="bUndo" title="復原 (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h11a5 5 0 0 1 0 10h-5"/><path d="M7 6l-4 4 4 4"/></svg></button>
+    <button class="hb" id="bRedo" title="重做 (Ctrl+Shift+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10H10a5 5 0 0 0 0 10h5"/><path d="M17 6l4 4-4 4"/></svg></button>
+  </div>
+  <div id="ctrls"></div>
+</aside>
+<div id="toast"></div>
+
+<script id="common" type="x-shader/x-fragment">
+uniform float uTime;
+uniform vec2  uSize;
+uniform vec2  uPanels;
+uniform vec2  uFoldAmp;
+uniform float uFoldSharp;
+uniform float uFoldWobble;
+uniform float uFoldRot;
+uniform float uCrumple;
+uniform float uCrumpleScale;
+uniform float uCrSoft;
+uniform float uCrWarp;
+uniform vec4  uCrW[16];
+uniform float uCrN;
+uniform float uMicro;
+uniform float uWave;
+uniform float uCurl;
+uniform float uSeed;
+uniform vec4  uFolds[4];
+uniform float uLift;
+uniform float uBulge;
+
+vec2 cornerPos(int i){
+  vec2 s = uSize*0.5;
+  if(i==0) return vec2(-s.x,-s.y);
+  if(i==1) return vec2( s.x,-s.y);
+  if(i==2) return vec2( s.x, s.y);
+  return vec2(-s.x, s.y);
+}
+/* 把角拖到 T：折線 = C 到 T 的中垂線，角那一側整片鏡射過去 */
+vec2 foldPoint(vec2 p, out float flip, out float fd, out vec2 fn){
+  flip = 0.0; fd = 0.0; fn = vec2(0.0);
+  for(int i=0;i<4;i++){
+    if(uFolds[i].z < 0.5) continue;
+    vec2 C = cornerPos(i);
+    vec2 T = uFolds[i].xy;
+    vec2 d = T - C;
+    float L = length(d);
+    if(L < 1e-4) continue;
+    vec2 n = d/L;
+    float sd = dot(p - (C+T)*0.5, n);
+    if(sd < 0.0){ p -= 2.0*sd*n; flip = 1.0 - flip; fd = -sd; fn = n; }
+  }
+  return p;
+}
+
+float hash21(vec2 p){
+  p = fract(p * vec2(123.34, 456.21));
+  p += dot(p, p + 45.32);
+  return fract(p.x * p.y);
+}
+vec2 grad2(vec2 i){
+  vec3 p3 = fract(vec3(i.xyx) * vec3(0.1031, 0.1030, 0.0973));
+  p3 += dot(p3, p3.yzx + 33.33);
+  vec2 g = fract((p3.xx + p3.yz)*p3.zy)*2.0 - 1.0;
+  return g * inversesqrt(max(dot(g,g), 1e-4));
+}
+float vnoise(vec2 p){
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f*f*f*(f*(f*6.0-15.0)+10.0);
+  float a = dot(grad2(i),               f);
+  float b = dot(grad2(i+vec2(1.0,0.0)), f-vec2(1.0,0.0));
+  float c = dot(grad2(i+vec2(0.0,1.0)), f-vec2(0.0,1.0));
+  float d = dot(grad2(i+vec2(1.0,1.0)), f-vec2(1.0,1.0));
+  return mix(mix(a,b,u.x), mix(c,d,u.x), u.y)*0.7 + 0.5;
+}
+float fbm(vec2 p, int oct){
+  float s=0.0, a=0.5, n=0.0;
+  for(int i=0;i<6;i++){
+    if(i>=oct) break;
+    s += a*vnoise(p); n += a;
+    p = mat2(0.80,0.60,-0.60,0.80)*p*2.07 + 13.7; a *= 0.5;
+  }
+  return s/max(n,1e-5);
+}
+float ridged(vec2 p, int oct){
+  float k  = uCrSoft*0.80;                        /* 羽化：脊線變圓頭 */
+  float lo = 1.0 - (sqrt(1.0 + k*k) - k);
+  float iv = 1.0/max(1.0 - lo, 1e-3);
+  float s=0.0, a=0.5, n=0.0;
+  for(int i=0;i<6;i++){
+    if(i>=oct) break;
+    float v = vnoise(p)*2.0-1.0;
+    v = clamp((1.0 - (sqrt(v*v + k*k) - k) - lo)*iv, 0.0, 1.0);
+    v = mix(v*v, v, uCrSoft);                     /* 羽化：脊線變寬 */
+    s += a*v; n += a;
+    p = mat2(0.72,-0.69,0.69,0.72)*p*2.13 + 7.3; a *= 0.55;
+  }
+  return s/max(n,1e-5);
+}
+float flapShade(vec2 p){
+  float sh = 0.0;
+  vec2 s2 = uSize*0.5;
+  for(int i=0;i<4;i++){
+    if(uFolds[i].z < 0.5) continue;
+    vec2 C = cornerPos(i);
+    vec2 T = uFolds[i].xy;
+    vec2 d = T - C;
+    float L = length(d);
+    if(L < 1e-4) continue;
+    vec2 n = d/L;
+    float sd = dot(p - (C+T)*0.5, n);
+    if(sd <= 0.0) continue;
+    vec2 q = abs(p - 2.0*sd*n) - s2;
+    float dr = max(length(max(q, 0.0)) + min(max(q.x, q.y), 0.0), 0.0);
+    sh = max(sh, 1.0 - smoothstep(0.0, uSize.y*0.030, dr));
+  }
+  return sh;
+}
+/* 每一道 = 一個方向上的連續折線；16 道不同角度疊起來就是皺紙的多邊形面 */
+float crumpleFolds(vec2 pt, float k){
+  float h = 0.0;
+  for(int i=0;i<16;i++){
+    if(float(i) >= uCrN) break;
+    vec4 f = uCrW[i];
+    float x = fract(dot(pt, f.xy) + f.z)*2.0 - 1.0;
+    h += f.w * (sqrt(x*x + k*k) - k);
+  }
+  return h;
+}
+float tri01(float t, float k){
+  float x = fract(t*0.5)*2.0 - 1.0;
+  return sqrt(x*x + k*k) - k;
+}
+float creaseDist(float t){
+  return abs(fract(t*0.5)*2.0 - 1.0);
+}
+
+void crumpleCtx(vec2 uv, out vec2 warp, out float mk, out vec2 wob){
+  vec2 p = (uv - 0.5) * uSize;
+  float w  = uCrWarp;
+  float wa = (0.12 + 0.55*w)/uCrumpleScale;
+  warp  = wa*(vec2(vnoise(p*uCrumpleScale*0.32 + uSeed), vnoise(p*uCrumpleScale*0.32 + 11.0))*2.0 - 1.0);
+  warp += wa*0.32*(vec2(vnoise(p*uCrumpleScale*1.15 + 5.0), vnoise(p*uCrumpleScale*1.15 + 23.0))*2.0 - 1.0);
+  float m = vnoise(p*uCrumpleScale*0.20 + uSeed*5.0);
+  mk  = mix(1.0, 0.32 + 1.90*m*m, w);
+  wob = vec2(vnoise(vec2(uv.y*4.0, uSeed*3.1)) - 0.5,
+             vnoise(vec2(uv.x*4.0, uSeed*3.1 + 9.0)) - 0.5);
+}
+
+float heightAt(vec2 uv, vec2 warp, float mk, vec2 wob, out vec2 cd){
+  vec2 p = (uv - 0.5) * uSize;
+  float h = 0.0;
+  cd = vec2(1.0);
+
+  float cs = cos(uFoldRot), sn = sin(uFoldRot);
+  vec2 pr  = vec2(cs*p.x + sn*p.y, cs*p.y - sn*p.x);
+  vec2 ext = vec2(abs(cs)*uSize.x + abs(sn)*uSize.y,
+                  abs(sn)*uSize.x + abs(cs)*uSize.y);
+  vec2 fuv = pr/ext + 0.5;
+
+  if(uPanels.x >= 1.5){
+    float tx = (fuv.x + wob.x*uFoldWobble) * uPanels.x;
+    h += uFoldAmp.x * (tri01(tx, uFoldSharp) - 0.5);
+    cd.x = creaseDist(tx);
+  }
+  if(uPanels.y >= 1.5){
+    float ty = (fuv.y + wob.y*uFoldWobble) * uPanels.y;
+    h += uFoldAmp.y * (tri01(ty, uFoldSharp) - 0.5);
+    cd.y = creaseDist(ty);
+  }
+  if(uCrumple > 0.0001){
+    h += uCrumple * mk * crumpleFolds(p + warp, uCrSoft*0.115 + 0.006);
+  }
+  if(uMicro > 0.0001){
+    h += uMicro * (ridged(p*uCrumpleScale*4.1 + uSeed*7.0 + 31.0, 2) - 0.42);
+  }
+  h += uWave * (fbm(p*0.9 + vec2(uTime*0.03, uTime*0.021), 2) - 0.5);
+  h += uWave * 0.45 * sin(p.x*2.2 + uTime*0.35) * cos(p.y*1.7 - uTime*0.24);
+
+  vec2 ed = abs(uv-0.5)*2.0;
+  h += uCurl * 0.5 * (ed.x*ed.x*ed.x + ed.y*ed.y*ed.y);
+  return h;
+}
+</script>
+
+<script id="vs" type="x-shader/x-vertex">
+#version 300 es
+precision highp float;
+in vec2 aUv;
+uniform mat4 uProj, uView, uModel;
+out vec2 vUv;
+out vec2 vUvN;
+out float vFlip;
+out vec2 vFN;
+out vec3 vWorld;
+//__COMMON__
+void main(){
+  vec2 cd; float flip, fd; vec2 fn, warp, wob; float mk;
+  vec2 p = foldPoint((aUv-0.5)*uSize, flip, fd, fn);
+  vec2 uvN = p/uSize + 0.5;
+  crumpleCtx(uvN, warp, mk, wob);
+  float h = heightAt(uvN, warp, mk, wob, cd) + flip*(uLift + uBulge*fd);
+  vUvN = uvN; vFlip = flip; vFN = fn*flip;
+  vec3 lp = vec3(p, h);
+  vec4 wp = uModel * vec4(lp, 1.0);
+  vWorld = wp.xyz;
+  vUv = aUv;
+  gl_Position = uProj * uView * wp;
+}
+</script>
+
+<script id="fs" type="x-shader/x-fragment">
+#version 300 es
+precision highp float;
+in vec2 vUv;
+in vec2 vUvN;
+in float vFlip;
+in vec2 vFN;
+in vec3 vWorld;
+out vec4 outColor;
+
+uniform mat3 uNrm;
+uniform vec3 uCam;
+uniform sampler2D uTex;
+uniform int   uHasTex;
+uniform int   uViewMode;
+uniform vec4  uUvXf;
+uniform float uInk;
+uniform float uTintInk;
+uniform vec3  uPaperCol;
+uniform float uTrans;
+uniform float uRough;
+uniform float uSpec;
+uniform float uFiber;
+uniform float uFiberScale;
+uniform float uAging;
+uniform float uStain;
+uniform float uWear;
+uniform float uCreaseDark;
+uniform float uAO;
+uniform vec3  uKeyCol;
+uniform float uKeyInt;
+uniform vec3  uLightDir;
+uniform float uAmb;
+uniform vec3  uSkyCol, uGndCol;
+uniform float uGrain;
+uniform float uVign;
+uniform vec2  uRes;
+//__COMMON__
+
+vec3 aces(vec3 x){
+  return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0.0, 1.0);
+}
+
+void main(){
+  vec2 e = max(vec2(0.0009), vec2(fwidth(vUvN.x), fwidth(vUvN.y))*0.85);
+  vec2 cd, tmp, warp, wob; float mk;
+  crumpleCtx(vUvN, warp, mk, wob);
+  float h0  = heightAt(vUvN, warp, mk, wob, cd);
+  float hx1 = heightAt(vUvN + vec2(e.x,0.0), warp, mk, wob, tmp);
+  float hx0 = heightAt(vUvN - vec2(e.x,0.0), warp, mk, wob, tmp);
+  float hy1 = heightAt(vUvN + vec2(0.0,e.y), warp, mk, wob, tmp);
+  float hy0 = heightAt(vUvN - vec2(0.0,e.y), warp, mk, wob, tmp);
+
+  float dhdx = (hx1-hx0)/(2.0*e.x*uSize.x);
+  float dhdy = (hy1-hy0)/(2.0*e.y*uSize.y);
+  vec3 nL = normalize(vec3(-dhdx - uBulge*vFN.x, -dhdy - uBulge*vFN.y, 1.0));
+
+  vec2 fp = vUv * uSize * vec2(uFiberScale*0.28, uFiberScale);
+  float f0 = vnoise(fp);
+  nL.xy += vec2(vnoise(fp+vec2(0.7,0.0))-f0, vnoise(fp+vec2(0.0,0.7))-f0) * uFiber;
+  nL = normalize(nL);
+
+  vec3 Ng = normalize(uNrm * nL);
+  float sideDot = dot(Ng, normalize(uCam - vWorld));
+  bool seeBack = (sideDot < 0.0) != (vFlip > 0.5);
+  vec3 N = sideDot < 0.0 ? -Ng : Ng;
+
+  float ew  = e.x*uSize.x;
+  float lap = ((hx1+hx0+hy1+hy0)*0.25 - h0) / max(ew*ew, 1e-6);
+  float ao  = 1.0 - 0.55*(1.0 - exp(-max(lap,0.0)*uAO*0.022));
+  ao = clamp(ao + clamp(-lap*uAO*0.008, -0.16, 0.16), 0.0, 1.18);
+
+  float cw = 0.0, cwSoft = 0.0;
+  if(uPanels.x >= 1.5){ cw = max(cw, 1.0-smoothstep(0.0,0.045,cd.x)); cwSoft = max(cwSoft, 1.0-smoothstep(0.0,0.105,cd.x)); }
+  if(uPanels.y >= 1.5){ cw = max(cw, 1.0-smoothstep(0.0,0.045,cd.y)); cwSoft = max(cwSoft, 1.0-smoothstep(0.0,0.105,cd.y)); }
+  float cwN = cw * (0.35 + 0.65*fbm(vUvN*70.0 + uSeed, 2));
+  ao *= 1.0 - uCreaseDark*cwSoft*0.55;
+  if(vFlip < 0.5) ao *= 1.0 - 0.62*flapShade((vUvN-0.5)*uSize);
+
+  vec3 paper = uPaperCol;
+  vec3 art = paper;
+  vec2 iuv = (vUv-0.5)*uUvXf.xy + 0.5 + uUvXf.zw;
+  bool inside = all(greaterThanEqual(iuv, vec2(0.0))) && all(lessThanEqual(iuv, vec2(1.0)));
+  vec3 tsm = pow(texture(uTex, clamp(iuv, 0.0, 1.0)).rgb, vec3(2.2));
+  if(uHasTex==1 && inside && uViewMode==0) art = mix(paper, mix(tsm, tsm*paper, uTintInk), uInk);
+  if(seeBack) art = mix(paper*0.94, art, 0.07);
+
+  float ag = fbm(vUv*vec2(3.0,4.2) + uSeed*2.0, 4);
+  art = mix(art, art*vec3(0.90,0.80,0.60), uAging*(0.30+0.70*ag));
+  float edge = max(abs(vUv.x-0.5), abs(vUv.y-0.5))*2.0;
+  art = mix(art, art*vec3(0.80,0.66,0.44), uAging*smoothstep(0.55,1.0,edge)*0.9);
+  float st = smoothstep(0.60,0.82, fbm(vUv*7.0 + uSeed*5.0 + 31.0, 3));
+  art *= 1.0 - uStain*st*0.55;
+  art = mix(art, paper*1.05, clamp(uWear*cwN, 0.0, 1.0));
+  art *= 1.0 - 0.10*uFiber*(vnoise(fp*1.7)-0.5);
+
+  vec3 L = normalize(uLightDir);
+  vec3 V = normalize(uCam - vWorld);
+  float ndl = dot(N,L);
+  float diff = pow(clamp((ndl + 0.45)/1.45, 0.0, 1.0), 1.35);
+
+  vec3 H = normalize(L+V);
+  float ndh = max(dot(N,H), 0.0);
+  float a2 = max(uRough*uRough, 0.02); a2 = a2*a2;
+  float den = ndh*ndh*(a2-1.0)+1.0;
+  float D = a2/(3.14159*den*den);
+  float fr = 0.03 + 0.30*pow(1.0-max(dot(N,V),0.0), 5.0);
+  float spec = D*fr*uSpec*max(ndl+0.15, 0.0);
+
+  float back = pow(clamp(dot(-N,L), 0.0, 1.0), 2.2);
+  vec3 trans = uTrans * back * art * 1.4;
+
+  vec3 amb = mix(uGndCol, uSkyCol, N.y*0.5+0.5) * uAmb;
+  vec3 col = art*(diff*uKeyCol*uKeyInt + amb)*ao + spec*uKeyCol*uKeyInt + trans*ao;
+
+  col = pow(aces(col), vec3(1.0/2.2));
+
+  vec2 sc = gl_FragCoord.xy/uRes;
+  float vg = 1.0 - uVign*0.9*pow(length((sc-0.5)*vec2(1.15,1.0))*1.35, 2.2);
+  col *= clamp(vg, 0.0, 1.0);
+  col += (hash21(gl_FragCoord.xy + fract(uTime)*13.0)-0.5)*uGrain*0.13;
+
+  outColor = vec4(col, 1.0);
+}
+</script>
+
+<script id="bgvs" type="x-shader/x-vertex">
+#version 300 es
+precision highp float;
+in vec2 aUv;
+out vec2 vP;
+void main(){ vP = aUv; gl_Position = vec4(aUv*2.0-1.0, 0.9999, 1.0); }
+</script>
+
+<script id="bgfs" type="x-shader/x-fragment">
+#version 300 es
+precision highp float;
+in vec2 vP;
+out vec4 outColor;
+uniform vec3  uTop, uBot;
+uniform vec2  uShC, uShR;
+uniform float uShSoft, uShStr;
+uniform float uBgGrain, uAlpha, uTime;
+uniform vec2  uRes;
+float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+void main(){
+  vec3 c = mix(uBot, uTop, pow(clamp(vP.y,0.0,1.0), 0.85));
+  vec2 d = (gl_FragCoord.xy - uShC)/max(uShR, vec2(1.0));
+  float sh = 1.0 - smoothstep(1.0-uShSoft, 1.0+uShSoft*1.6, length(d));
+  c *= 1.0 - sh*uShStr;
+  c = pow(clamp(c,0.0,4.0), vec3(1.0/2.2));
+  c += (h21(gl_FragCoord.xy + fract(uTime)*7.0)-0.5)*uBgGrain*0.10;
+  outColor = vec4(c, uAlpha);
+}
+</script>
+
+<script>
+'use strict';
+const cv = document.getElementById('gl');
+const gl = cv.getContext('webgl2', {alpha:true, premultipliedAlpha:false,
+  preserveDrawingBuffer:true, antialias:true, powerPreference:'high-performance'});
+if(!gl){ document.body.innerHTML =
+  '<div style="padding:40px;font:15px sans-serif;color:#ddd">這台瀏覽器沒開 WebGL2，請用 Chrome / Edge 開這個檔案。</div>'; }
+
+/* ---------- 小工具 ---------- */
+const src = id => document.getElementById(id).textContent.trim();
+const COMMON = src('common');
+function build(s){ return s.replace('//__COMMON__', COMMON); }
+function sh(type, s){
+  const o = gl.createShader(type); gl.shaderSource(o, s); gl.compileShader(o);
+  if(!gl.getShaderParameter(o, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(o), s);
+  return o;
+}
+function prog(vsSrc, fsSrc){
+  const p = gl.createProgram();
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, vsSrc));
+  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fsSrc));
+  gl.bindAttribLocation(p, 0, 'aUv');
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(p));
+  const cache = {};
+  p.u = n => (n in cache) ? cache[n] : (cache[n] = gl.getUniformLocation(p, n));
+  return p;
+}
+let CUR = null;
+const U1f = (n,v)   => { const l=CUR.u(n); if(l) gl.uniform1f(l,v); };
+const U1i = (n,v)   => { const l=CUR.u(n); if(l) gl.uniform1i(l,v); };
+const U2f = (n,a,b) => { const l=CUR.u(n); if(l) gl.uniform2f(l,a,b); };
+const U3f = (n,a,b,c)=>{ const l=CUR.u(n); if(l) gl.uniform3f(l,a,b,c); };
+const U4f = (n,a,b,c,d)=>{const l=CUR.u(n); if(l) gl.uniform4f(l,a,b,c,d); };
+const UM4 = (n,m)   => { const l=CUR.u(n); if(l) gl.uniformMatrix4fv(l,false,m); };
+const UM3 = (n,m)   => { const l=CUR.u(n); if(l) gl.uniformMatrix3fv(l,false,m); };
+
+/* ---------- 矩陣 ---------- */
+const M4 = () => new Float32Array(16);
+function ident(m){ m.fill(0); m[0]=m[5]=m[10]=m[15]=1; return m; }
+function persp(m, fovy, asp, n, f){
+  const t = 1/Math.tan(fovy/2); m.fill(0);
+  m[0]=t/asp; m[5]=t; m[10]=(f+n)/(n-f); m[11]=-1; m[14]=2*f*n/(n-f); return m;
+}
+function mul(o,a,b){
+  const r = new Float32Array(16);
+  for(let i=0;i<4;i++) for(let j=0;j<4;j++){
+    let s=0; for(let k=0;k<4;k++) s += a[k*4+j]*b[i*4+k];
+    r[i*4+j]=s;
+  }
+  o.set(r); return o;
+}
+function rotX(m,r){ ident(m); const c=Math.cos(r), s=Math.sin(r);
+  m[5]=c; m[6]=s; m[9]=-s; m[10]=c; return m; }
+function rotY(m,r){ ident(m); const c=Math.cos(r), s=Math.sin(r);
+  m[0]=c; m[2]=-s; m[8]=s; m[10]=c; return m; }
+function tr(m,x,y,z){ ident(m); m[12]=x; m[13]=y; m[14]=z; return m; }
+function m3of(m){ return new Float32Array([m[0],m[1],m[2], m[4],m[5],m[6], m[8],m[9],m[10]]); }
+function xform(m,v){
+  return [m[0]*v[0]+m[4]*v[1]+m[8]*v[2]+m[12],
+          m[1]*v[0]+m[5]*v[1]+m[9]*v[2]+m[13],
+          m[2]*v[0]+m[6]*v[1]+m[10]*v[2]+m[14],
+          m[3]*v[0]+m[7]*v[1]+m[11]*v[2]+m[15]];
+}
+function hex2lin(h){
+  const n = parseInt(h.slice(1),16);
+  const f = v => Math.pow(v/255, 2.2);
+  return [f((n>>16)&255), f((n>>8)&255), f(n&255)];
+}
+</script>
+
+<script>
+'use strict';
+const P = {
+  ratio:'2:3', orient:'port', imgRatio:false, tintInk:true, scale:1.00, paperCol:'#f5f1e7', trans:0.30,
+  panelsX:2, panelsY:1, foldRot:0, foldAmp:0.46, foldSharp:0.72, foldWobble:0.020,
+  wear:0.35, creaseDark:0.55,
+  crumple:0.22, crumpleDense:0.35, crSoft:0.55, crWarp:0.60, micro:0.30, curl:0.14, wave:0.10,
+  rough:0.74, spec:0.45, fiber:0.35, fiberDense:0.45, aging:0.12, stain:0.10, ao:1.00,
+  lightAz:-52, lightEl:30, keyInt:1.60, amb:0.44, warm:0.50,
+  ink:1.00, fit:'cover',
+  bgTop:'#2b2f36', bgBot:'#141518', shStr:0.55, shSoft:0.55,
+  grain:0.30, vign:0.35, quality:'high', view:'full',
+  seed: Math.random()*80+1, zoom:1.00, exp:2
+};
+
+const ICON = {
+  dice:'<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
+  down:'<path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 21h16"/>',
+  reset:'<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
+  img:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>'
+};
+const svg = (d,w) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(w||1.7)+'" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';
+
+const R = (k,t,min,max,step,dec) => ({y:'r', k, t, min, max, step, dec:dec===undefined?2:dec});
+const S = (k,t,opts) => ({y:'s', k, t, opts});
+const C = (k,t) => ({y:'c', k, t});
+const K = (k,t) => ({y:'k', k, t});
+const B = (t,act,icon,cls) => ({y:'b', t, act, icon, cls});
+
+const SECTIONS = [
+ {t:'預設樣式', items:[
+   S('preset','套一個', [['new','剛印好的海報'],['half','對折收藏'],['grid8','八格老海報'],
+     ['crushed','揉過再攤平'],['kraft','牛皮紙'],['news','報紙'],['tracing','描圖紙'],['flat','完全平的']]),
+   B('換一種皺法','reseed','dice'),
+ ]},
+ {t:'紙張', items:[
+   K('imgRatio','紙張跟著圖片比例'),
+   S('ratio','比例',[['a','A 系列 1:1.41'],['2:3','2:3 海報'],['3:4','3:4'],
+     ['4:5','4:5'],['1:1','1:1 正方形'],['27:40','27:40 電影海報'],['phi','1:1.618 黃金比例'],
+     ['9:16','9:16 寬螢幕'],['1:3','1:3 長條']]),
+   S('orient','直橫',[['port','直式'],['land','橫式']]),
+   R('scale','大小',0.5,1.6,0.01),
+   C('paperCol','紙色'),
+   K('tintInk','紙色染到圖片'),
+   R('trans','透光（薄）',0,1.2,0.01),
+ ]},
+ {t:'摺法', items:[
+   R('panelsX','直向格數',1,8,1,0),
+   R('panelsY','橫向格數',1,8,1,0),
+   R('foldRot','折痕角度',-90,90,1,0),
+   R('foldAmp','折痕深度',0,1,0.01),
+   R('foldSharp','折痕銳利',0,1,0.01),
+   R('foldWobble','折痕歪斜',0,0.08,0.002,3),
+   R('wear','折痕磨白',0,1,0.01),
+   R('creaseDark','折痕陰影',0,1,0.01),
+   B('攤平四個角','unfold','reset'),
+   {y:'note',t:'四個角上有小圓點，用滑鼠把角拖進紙裡面就會折起來，翻過來的是紙背。雙擊圓點攤平。'},
+ ]},
+ {t:'皺褶', items:[
+   R('crumple','皺褶強度',0,1,0.01),
+   R('crumpleDense','皺褶密度',0,1,0.01),
+   R('crSoft','皺褶羽化',0,1,0.01),
+   R('crWarp','皺褶亂度',0,1,0.01),
+   R('micro','細紋',0,1,0.01),
+   R('curl','邊緣捲曲',0,1,0.01),
+   R('wave','飄動',0,0.6,0.01),
+   R('ao','皺褶陰影',0,2,0.01),
+ ]},
+ {t:'質感', items:[
+   R('rough','粗糙度',0.15,1,0.01),
+   R('spec','反光',0,2,0.01),
+   R('fiber','紙纖維',0,1.2,0.01),
+   R('fiberDense','纖維細度',0,1,0.01),
+   R('aging','泛黃老化',0,1,0.01),
+   R('stain','髒污斑點',0,1,0.01),
+ ]},
+ {t:'燈光', items:[
+   R('lightAz','光的方向',-180,180,1,0),
+   R('lightEl','光的高度',-80,85,1,0),
+   R('keyInt','主光強度',0,3,0.01),
+   R('amb','環境光',0,1.5,0.01),
+   R('warm','色溫（暖↔冷）',0,1,0.01),
+ ]},
+ {t:'海報圖片', items:[
+   B('選一張圖當海報','pick','img'),
+   {y:'file'},
+   {y:'name'},
+   S('fit','填滿方式',[['cover','裁切填滿'],['contain','完整放入']]),
+   R('ink','印刷濃度',0,1,0.01),
+   B('拿掉圖片','clearimg','x'),
+ ]},
+ {t:'背景與畫面', items:[
+   C('bgTop','背景 上'),
+   C('bgBot','背景 下'),
+   R('shStr','影子濃度',0,1,0.01),
+   R('shSoft','影子柔邊',0.05,1,0.01),
+   R('grain','底片顆粒',0,1,0.01),
+   R('vign','暗角',0,1,0.01),
+ ]},
+ {t:'輸出', items:[
+   S('quality','畫質',[['high','高'],['mid','中'],['low','低（卡的話選這個）']]),
+   S('view','檢視',[['full','完成品'],['paper','只看紙（看摺痕用）']]),
+   S('exp','存檔倍率',[[1,'1x 螢幕大小'],[2,'2x'],[3,'3x'],[4,'4x（大檔）']]),
+   B('存成 PNG','png','down','primary'),
+   B('存成 PNG（透明背景）','pngT','down'),
+   B('全部重來','resetAll','reset'),
+ ]},
+];
+</script>
+
+<script>
+'use strict';
+const CLOSED = {'質感':1,'燈光':1,'背景與畫面':1};
+const REFRESH = [];
+const ctrls = document.getElementById('ctrls');
+let onChange = () => {};
+
+function fmt(v, dec){ return dec===0 ? String(Math.round(v)) : v.toFixed(dec); }
+
+function buildPanel(){
+  P.preset = 'half';
+  SECTIONS.forEach(sec => {
+    const d = document.createElement('div');
+    d.className = 'sec' + (CLOSED[sec.t] ? ' closed' : '');
+    const h = document.createElement('h3');
+    h.innerHTML = '<span class="chev">'+svg('<path d="M6 9l6 6 6-6"/>',2.2)+'</span>'+sec.t;
+    h.onclick = () => d.classList.toggle('closed');
+    d.appendChild(h);
+    const body = document.createElement('div'); body.className = 'body';
+    d.appendChild(body);
+    sec.items.forEach(it => body.appendChild(makeItem(it)));
+    ctrls.appendChild(d);
+  });
+}
+
+function makeItem(it){
+  const row = document.createElement('div'); row.className = 'row';
+  if(it.y === 'r'){
+    row.innerHTML = '<label>'+it.t+'</label>';
+    const i = document.createElement('input');
+    i.type='range'; i.min=it.min; i.max=it.max; i.step=it.step; i.value=P[it.k];
+    const v = document.createElement('span'); v.className='val'; v.textContent=fmt(P[it.k],it.dec);
+    i.oninput = () => { P[it.k] = parseFloat(i.value); v.textContent = fmt(P[it.k],it.dec); onChange(it.k); };
+    i.onchange = () => pushHist();
+    row.appendChild(i); row.appendChild(v);
+    REFRESH.push(()=>{ i.value=P[it.k]; v.textContent=fmt(P[it.k],it.dec); });
+  }
+  else if(it.y === 's'){
+    row.innerHTML = '<label>'+it.t+'</label>';
+    const s = document.createElement('select');
+    const isNum = typeof it.opts[0][0] === 'number';
+    it.opts.forEach(o => { const e=document.createElement('option'); e.value=o[0]; e.textContent=o[1]; s.appendChild(e); });
+    s.value = P[it.k];
+    s.onchange = () => { P[it.k] = isNum ? parseFloat(s.value) : s.value; onChange(it.k); pushHist(); };
+    row.appendChild(s);
+    REFRESH.push(()=>{ s.value = P[it.k]; });
+  }
+  else if(it.y === 'k'){
+    row.innerHTML = '<label>'+it.t+'</label>';
+    const w=document.createElement('label'); w.className='chk';
+    const i=document.createElement('input'); i.type='checkbox'; i.checked=!!P[it.k];
+    const b=document.createElement('span'); b.className='box';
+    b.innerHTML = svg('<path d="M4 12l5 5L20 6"/>', 3);
+    w.appendChild(i); w.appendChild(b); row.appendChild(w);
+    i.onchange = () => { P[it.k]=i.checked; onChange(it.k); pushHist(); };
+    REFRESH.push(()=>{ i.checked = !!P[it.k]; });
+  }
+  else if(it.y === 'c'){
+    row.innerHTML = '<label>'+it.t+'</label>';
+    const i = document.createElement('input'); i.type='color'; i.value = P[it.k];
+    i.oninput = () => { P[it.k]=i.value; onChange(it.k); };
+    i.onchange = () => pushHist();
+    row.appendChild(i);
+    REFRESH.push(()=>{ i.value = P[it.k]; });
+  }
+  else if(it.y === 'b'){
+    row.style.display='block'; row.style.padding='0';
+    const b = document.createElement('button');
+    b.className = 'btn' + (it.cls ? ' '+it.cls : '');
+    b.innerHTML = (it.icon ? svg(ICON[it.icon]) : '') + '<span>'+it.t+'</span>';
+    b.onclick = () => ACT[it.act] && ACT[it.act]();
+    row.appendChild(b);
+  }
+  else if(it.y === 'file'){
+    row.style.display='none';
+    const i = document.createElement('input'); i.type='file'; i.id='fileIn'; i.accept='image/*';
+    row.appendChild(i);
+  }
+  else if(it.y === 'note'){
+    row.style.display='block'; row.style.padding='0';
+    const n=document.createElement('div'); n.className='note'; n.textContent=it.t;
+    row.appendChild(n);
+  }
+  else if(it.y === 'name'){
+    row.style.display='block'; row.style.padding='0';
+    const n = document.createElement('div'); n.className='filename'; n.id='fname'; n.textContent='目前：內建示範海報';
+    row.appendChild(n);
+  }
+  return row;
+}
+
+const PRESETS = {
+  new:     {foldRot:0,crSoft:0.55,crWarp:0.60,panelsX:1,panelsY:1,foldAmp:0.30,crumple:0.06,crumpleDense:0.30,micro:0.18,curl:0.10,wave:0.08,
+            aging:0.02,stain:0.02,wear:0.10,rough:0.72,spec:0.55,trans:0.25,paperCol:'#f7f4ec'},
+  half:    {foldRot:0,crSoft:0.55,crWarp:0.60,panelsX:2,panelsY:1,foldAmp:0.46,foldSharp:0.72,crumple:0.16,crumpleDense:0.32,micro:0.26,curl:0.14,
+            wave:0.10,aging:0.10,stain:0.06,wear:0.32,creaseDark:0.55,rough:0.74,spec:0.45,paperCol:'#f5f1e7'},
+  grid8:   {foldRot:0,crSoft:0.55,crWarp:0.60,panelsX:4,panelsY:2,foldAmp:0.55,foldSharp:0.72,foldWobble:0.024,crumple:0.24,crumpleDense:0.42,
+            micro:0.34,curl:0.20,wave:0.10,aging:0.34,stain:0.26,wear:0.62,creaseDark:0.70,rough:0.80,
+            spec:0.35,paperCol:'#efe7d6'},
+  crushed: {foldRot:0,crSoft:0.40,crWarp:0.75,panelsX:1,panelsY:1,crumple:0.50,crumpleDense:0.22,micro:0.34,curl:0.24,wave:0.12,aging:0.20,
+            stain:0.18,rough:0.78,spec:0.50,ao:1.05,paperCol:'#f2eee4'},
+  kraft:   {foldRot:0,crSoft:0.55,crWarp:0.60,panelsX:2,panelsY:2,foldAmp:0.40,crumple:0.34,crumpleDense:0.40,micro:0.40,curl:0.18,aging:0.05,
+            stain:0.12,wear:0.30,rough:0.88,spec:0.22,fiber:0.75,fiberDense:0.55,trans:0.18,paperCol:'#c9a071'},
+  news:    {foldRot:0,crSoft:0.55,crWarp:0.60,panelsX:2,panelsY:2,foldAmp:0.48,foldSharp:0.55,crumple:0.30,crumpleDense:0.55,micro:0.45,curl:0.28,
+            wave:0.16,aging:0.46,stain:0.22,wear:0.45,rough:0.90,spec:0.12,fiber:0.55,trans:0.72,paperCol:'#e6e0cd'},
+  tracing: {foldRot:0,crSoft:0.55,crWarp:0.60,panelsX:1,panelsY:1,crumple:0.30,crumpleDense:0.30,micro:0.30,curl:0.22,wave:0.14,aging:0.02,
+            stain:0.02,rough:0.42,spec:1.05,fiber:0.18,trans:1.10,ink:0.55,paperCol:'#eef1f0'},
+  flat:    {foldRot:0,crSoft:0.55,crWarp:0.60,panelsX:1,panelsY:1,crumple:0.0,micro:0.06,curl:0.0,wave:0.0,aging:0.0,stain:0.0,wear:0.0,
+            rough:0.72,spec:0.40,paperCol:'#f8f6f0'},
+};
+</script>
+
+<script>
+'use strict';
+const DEFAULTS = JSON.parse(JSON.stringify(P));
+let imgAspect = 1000/1500;
+
+function defaultPoster(){
+  const c = document.createElement('canvas'); c.width=1000; c.height=1500;
+  const x = c.getContext('2d');
+  x.fillStyle='#ece5d8'; x.fillRect(0,0,1000,1500);
+  x.fillStyle='#d94f30'; x.beginPath(); x.arc(690,420,232,0,Math.PI*2); x.fill();
+  x.fillStyle='#17181c';
+  x.font='600 26px "Helvetica Neue",Arial,sans-serif';
+  x.fillText('PAPER POSTER STUDIO',80,120);
+  x.fillText('NO. 001',80,158);
+  x.font='900 300px "Arial Black",Impact,sans-serif';
+  const w = x.measureText('PAPER').width || 1100;
+  x.save(); x.translate(80,900); x.scale(840/w,1); x.fillText('PAPER',0,0); x.restore();
+  x.fillRect(80,952,840,10);
+  x.font='500 62px "Microsoft JhengHei","Noto Sans TC",sans-serif';
+  x.fillText('紙 的 摺 痕',80,1064);
+  x.fillStyle='#3a3c42'; x.font='400 24px "Microsoft JhengHei",Arial,sans-serif';
+  ['一張紙被折過就回不去了。','FOLD / CREASE / CRUMPLE / LIGHT','2026 — 本機離線算圖，不用網路'].forEach((t,i)=>x.fillText(t,80,1140+i*38));
+  x.fillStyle='#17181c'; x.fillRect(80,1378,840,6);
+  x.font='600 24px Arial,sans-serif'; x.fillText('BAY  /  PAPERPOSTER',80,1436);
+  return c;
+}
+
+const tex = gl.createTexture();
+const aniso = gl.getExtension('EXT_texture_filter_anisotropic');
+function setTex(img){
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  if(aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT,
+    Math.min(8, gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+  imgAspect = img.width/img.height;
+  if(P.imgRatio) buildMesh();
+}
+
+let _crKey='', _crBuf=new Float32Array(64);
+function crumpleWaves(){
+  const NW = P.quality==='high' ? 16 : P.quality==='mid' ? 11 : 7;
+  const key = P.seed+'|'+P.crumpleDense+'|'+NW;
+  if(key===_crKey) return _crBuf;
+  _crKey = key;
+  let st = Math.floor(P.seed*7919)%233280 + 1;
+  const rnd = () => { st=(st*9301+49297)%233280; return st/233280; };
+  const base = 0.50 + P.crumpleDense*2.90;
+  const w=[]; let tot=0;
+  for(let i=0;i<NW;i++){
+    const a  = rnd()*Math.PI;
+    const fr = base*(0.55 + 1.35*rnd());
+    let  wt  = (0.45 + 0.85*rnd())*Math.pow(base/fr, 0.9);
+    if(rnd() < 0.5) wt = -wt;
+    w.push([Math.cos(a)*fr, Math.sin(a)*fr, rnd(), wt]);
+    tot += Math.abs(wt);
+  }
+  _crBuf.fill(0);
+  for(let i=0;i<NW;i++){
+    _crBuf[i*4]   = w[i][0]; _crBuf[i*4+1] = w[i][1];
+    _crBuf[i*4+2] = w[i][2]; _crBuf[i*4+3] = w[i][3]/tot*12.0;
+  }
+  return _crBuf;
+}
+
+/* 一律先寫成直式（寬/高 <= 1），選橫式再倒過來 */
+const RATIOS = {
+  'a':   1/Math.SQRT2,
+  '2:3': 2/3,
+  '3:4': 3/4,
+  '4:5': 4/5,
+  '1:1': 1,
+  '27:40': 27/40,
+  'phi': 1/1.618,
+  '9:16': 9/16,
+  '1:3': 1/3,
+};
+function paperSize(){
+  let a;
+  if(P.imgRatio) a = imgAspect;
+  else {
+    a = RATIOS[P.ratio] || 2/3;
+    if(P.orient === 'land') a = 1/a;
+  }
+  const b = 1.55*P.scale;
+  return a>=1 ? [b, b/a] : [b*a, b];
+}
+function uvXf(){
+  const s = paperSize(), ap = s[0]/s[1], ai = imgAspect;
+  let sx=1, sy=1;
+  if(!P.imgRatio){
+    if(P.fit==='cover'){ if(ai>ap) sx=ap/ai; else sy=ai/ap; }
+    else               { if(ai>ap) sy=ai/ap; else sx=ap/ai; }
+  }
+  return [sx,sy,0,0];
+}
+
+let vao=null, idxCount=0;
+function buildMesh(){
+  const base = P.quality==='high'?180 : P.quality==='mid'?120 : 70;
+  const s = paperSize();
+  const nx = Math.max(8, Math.round(base*Math.sqrt(s[0]/s[1])));
+  const ny = Math.max(8, Math.round(base*Math.sqrt(s[1]/s[0])));
+  const vs = new Float32Array((nx+1)*(ny+1)*2);
+  let p=0;
+  for(let j=0;j<=ny;j++) for(let i=0;i<=nx;i++){ vs[p++]=i/nx; vs[p++]=j/ny; }
+  const id = new Uint32Array(nx*ny*6); let q=0;
+  for(let j=0;j<ny;j++) for(let i=0;i<nx;i++){
+    const a=j*(nx+1)+i, b=a+1, c=a+nx+1, d=c+1;
+    id[q++]=a; id[q++]=b; id[q++]=c; id[q++]=b; id[q++]=d; id[q++]=c;
+  }
+  if(vao) gl.deleteVertexArray(vao);
+  vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+  const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+  gl.bufferData(gl.ARRAY_BUFFER, vs, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+  const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, id, gl.STATIC_DRAW);
+  gl.bindVertexArray(null);
+  idxCount = id.length;
+}
+const bgVao = (()=>{ const v=gl.createVertexArray(); gl.bindVertexArray(v);
+  const b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0, 2,0, 0,2]),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+  gl.bindVertexArray(null); return v; })();
+</script>
+
+<script>
+'use strict';
+const PG = prog(build(src('vs')), build(src('fs')));
+const BG = prog(src('bgvs'), src('bgfs'));
+let yaw=-0.30, pitch=0.16, panX=0, panY=0;
+const t0 = performance.now();
+
+function lightDir(){
+  const az=P.lightAz*Math.PI/180, el=P.lightEl*Math.PI/180;
+  return [Math.cos(el)*Math.sin(az), Math.sin(el), Math.cos(el)*Math.cos(az)];
+}
+function keyCol(){
+  const t=P.warm, a=[1.00,0.79,0.56], b=[0.72,0.84,1.00];
+  return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+}
+
+function render(now, transparent){
+  const t=(now-t0)/1000, W=cv.width, H=cv.height;
+  gl.viewport(0,0,W,H);
+  gl.clearColor(0,0,0,0);
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.disable(gl.CULL_FACE);
+
+  const s=paperSize(), fov=30*Math.PI/180, asp=W/H, tn=Math.tan(fov/2);
+  const dist = Math.max(s[1]*0.5/tn, s[0]*0.5/(tn*asp))*1.32/P.zoom;
+  const proj = persp(M4(), fov, asp, 0.05, 60);
+  const view = tr(M4(), 0,0,-dist);
+  const model = mul(M4(), tr(M4(),panX,panY,0), mul(M4(), rotY(M4(),yaw), rotX(M4(),pitch)));
+  const L = lightDir(), K = keyCol();
+  const top = hex2lin(P.bgTop), bot = hex2lin(P.bgBot);
+
+  if(!transparent){
+    const mvp = mul(M4(), proj, mul(M4(), view, model));
+    let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+    [[-1,-1],[1,-1],[1,1],[-1,1]].forEach(c=>{
+      const p = xform(mvp,[c[0]*s[0]/2, c[1]*s[1]/2, 0]);
+      const px=(p[0]/p[3]*0.5+0.5)*W, py=(p[1]/p[3]*0.5+0.5)*H;
+      x0=Math.min(x0,px); x1=Math.max(x1,px); y0=Math.min(y0,py); y1=Math.max(y1,py);
+    });
+    const off = 0.17*Math.max(x1-x0, y1-y0);
+    gl.disable(gl.DEPTH_TEST);
+    CUR=BG; gl.useProgram(BG); gl.bindVertexArray(bgVao);
+    U3f('uTop', top[0]*1.15+0.012, top[1]*1.15+0.012, top[2]*1.15+0.012);
+    U3f('uBot', bot[0]*1.15+0.006, bot[1]*1.15+0.006, bot[2]*1.15+0.006);
+    U2f('uShC', (x0+x1)/2 - L[0]*off, (y0+y1)/2 - L[1]*off);
+    U2f('uShR', (x1-x0)*0.60, (y1-y0)*0.60);
+    U1f('uShSoft', P.shSoft); U1f('uShStr', P.shStr);
+    U1f('uBgGrain', P.grain); U1f('uAlpha', 1.0); U1f('uTime', t);
+    U2f('uRes', W, H);
+    gl.drawArrays(gl.TRIANGLES,0,3);
+  }
+
+  gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
+  CUR=PG; gl.useProgram(PG); gl.bindVertexArray(vao);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex);
+  U1i('uTex',0); U1i('uHasTex',1); U1i('uViewMode', P.view==='paper'?1:0);
+  UM4('uProj',proj); UM4('uView',view); UM4('uModel',model);
+  UM3('uNrm', m3of(model));
+  U3f('uCam',0,0,dist);
+  U1f('uTime',t); U2f('uSize',s[0],s[1]);
+  U2f('uPanels', P.panelsX, P.panelsY);
+  const fa = P.foldAmp*0.165, fr = P.foldRot*Math.PI/180;
+  const fc = Math.abs(Math.cos(fr)), fs2 = Math.abs(Math.sin(fr));
+  const exX = fc*s[0]+fs2*s[1], exY = fs2*s[0]+fc*s[1];
+  U1f('uFoldRot', fr);
+  U2f('uFoldAmp',
+    P.panelsX>=2 ? fa*(2/P.panelsX)*(exX/1.55) : 0,
+    P.panelsY>=2 ? fa*(2/P.panelsY)*(exY/1.55) : 0);
+  U1f('uFoldSharp', 0.30*(1-P.foldSharp)+0.004);
+  U1f('uFoldWobble', P.foldWobble);
+  U1f('uCrumple', P.crumple*0.085*(1.0 + P.crSoft*0.70));
+  U1f('uCrumpleScale', 1.0 + P.crumpleDense*7.0);
+  U1f('uCrSoft', P.crSoft);
+  U1f('uCrWarp', P.crWarp);
+  const cwl = PG.u('uCrW[0]'); if(cwl) gl.uniform4fv(cwl, crumpleWaves());
+  U1f('uCrN', P.quality==='high' ? 16 : P.quality==='mid' ? 11 : 7);
+  U1f('uMicro', P.micro*0.013);
+  U1f('uWave', P.wave*0.12);
+  U1f('uCurl', P.curl*0.34);
+  U1f('uSeed', P.seed);
+  const fl = PG.u('uFolds[0]'); if(fl) gl.uniform4fv(fl, foldBuf());
+  U1f('uLift', 0.005*P.scale);
+  U1f('uBulge', 0.090);
+  const uv = uvXf(); U4f('uUvXf', uv[0],uv[1],uv[2],uv[3]);
+  U1f('uInk', P.ink);
+  U1f('uTintInk', P.tintInk ? 1.0 : 0.0);
+  const pc = hex2lin(P.paperCol); U3f('uPaperCol', pc[0],pc[1],pc[2]);
+  U1f('uTrans',P.trans); U1f('uRough',P.rough); U1f('uSpec',P.spec);
+  U1f('uFiber',P.fiber*0.55); U1f('uFiberScale', 60+P.fiberDense*340);
+  U1f('uAging',P.aging); U1f('uStain',P.stain); U1f('uWear',P.wear);
+  U1f('uCreaseDark',P.creaseDark); U1f('uAO',P.ao);
+  U3f('uKeyCol',K[0],K[1],K[2]); U1f('uKeyInt',P.keyInt);
+  U3f('uLightDir',L[0],L[1],L[2]); U1f('uAmb',P.amb);
+  U3f('uSkyCol', top[0]*1.9+0.05, top[1]*1.9+0.05, top[2]*1.9+0.05);
+  U3f('uGndCol', bot[0]*1.5+0.03, bot[1]*1.5+0.03, bot[2]*1.5+0.03);
+  U1f('uGrain',P.grain); U1f('uVign', transparent?0:P.vign);
+  U2f('uRes',W,H);
+  gl.drawElements(gl.TRIANGLES, idxCount, gl.UNSIGNED_INT, 0);
+  gl.bindVertexArray(null);
+}
+</script>
+
+<script>
+'use strict';
+function toast(m){
+  const el=document.getElementById('toast'); el.textContent=m; el.classList.add('on');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),1900);
+}
+function resize(){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const w = Math.max(2, Math.round(cv.clientWidth*dpr));
+  const h = Math.max(2, Math.round(cv.clientHeight*dpr));
+  if(cv.width!==w || cv.height!==h){ cv.width=w; cv.height=h; }
+}
+function exportPNG(transparent){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const ow=cv.width, oh=cv.height;
+  cv.width  = Math.round(cv.clientWidth  * dpr * P.exp);
+  cv.height = Math.round(cv.clientHeight * dpr * P.exp);
+  render(performance.now(), transparent);
+  let url;
+  try { url = cv.toDataURL('image/png'); }
+  catch(e){ toast('存檔失敗：'+e.message); cv.width=ow; cv.height=oh; return; }
+  cv.width=ow; cv.height=oh;
+  const a=document.createElement('a');
+  const st=new Date(), pad=n=>String(n).padStart(2,'0');
+  a.download='paper_'+st.getFullYear()+pad(st.getMonth()+1)+pad(st.getDate())+'_'+
+             pad(st.getHours())+pad(st.getMinutes())+pad(st.getSeconds())+(transparent?'_alpha':'')+'.png';
+  a.href=url; a.click();
+  toast('已存出 PNG（在你的「下載」資料夾）');
+}
+
+const ACT = {
+  reseed(){ P.seed = Math.random()*80+1; pushHist(); toast('換了一種皺法'); },
+  pick(){ document.getElementById('fileIn').click(); },
+  unfold(){ FOLDS.forEach(f=>f.a=0); pushHist(); toast('四個角都攤平了'); },
+  clearimg(){ useImg(DEF_IMG, '目前：內建示範海報'); pushHist(); },
+  png(){ exportPNG(false); },
+  pngT(){ exportPNG(true); },
+  resetAll(){ Object.assign(P, JSON.parse(JSON.stringify(DEFAULTS))); FOLDS.forEach(f=>{f.a=0;f.x=0;f.y=0;});
+    P.seed=Math.random()*80+1; REFRESH.forEach(f=>f()); buildMesh(); pushHist(); toast('全部回到出廠設定'); }
+};
+
+onChange = (k) => {
+  if(k==='preset'){ Object.assign(P, PRESETS[P.preset]||{}); REFRESH.forEach(f=>f()); buildMesh(); }
+  else if(k==='quality' || k==='ratio' || k==='orient' || k==='imgRatio') buildMesh();
+};
+
+/* ---------- 四角折角 ---------- */
+const FOLDS = [{x:0,y:0,a:0},{x:0,y:0,a:0},{x:0,y:0,a:0},{x:0,y:0,a:0}];
+const _fb = new Float32Array(16);
+function foldBuf(){
+  for(let i=0;i<4;i++){ _fb[i*4]=FOLDS[i].x; _fb[i*4+1]=FOLDS[i].y; _fb[i*4+2]=FOLDS[i].a; _fb[i*4+3]=0; }
+  return _fb;
+}
+function cornerXY(i){
+  const s=paperSize(), hx=s[0]/2, hy=s[1]/2;
+  return i===0?[-hx,-hy] : i===1?[hx,-hy] : i===2?[hx,hy] : [-hx,hy];
+}
+function foldPtJS(pt){
+  let x=pt[0], y=pt[1];
+  for(let i=0;i<4;i++){
+    const f=FOLDS[i]; if(!f.a) continue;
+    const C=cornerXY(i), dx=f.x-C[0], dy=f.y-C[1], L=Math.hypot(dx,dy);
+    if(L<1e-4) continue;
+    const nx=dx/L, ny=dy/L;
+    const sd=(x-(C[0]+f.x)/2)*nx + (y-(C[1]+f.y)/2)*ny;
+    if(sd<0){ x-=2*sd*nx; y-=2*sd*ny; }
+  }
+  return [x,y];
+}
+function cam(){
+  const s=paperSize(), tn=Math.tan(15*Math.PI/180);
+  const asp=cv.clientWidth/Math.max(1,cv.clientHeight);
+  const dist=Math.max(s[1]*0.5/tn, s[0]*0.5/(tn*asp))*1.32/P.zoom;
+  return {s,tn,asp,dist};
+}
+function rotIn(v){                     /* 世界 → 紙的本地座標（只轉，不平移） */
+  const cy=Math.cos(yaw), sy=Math.sin(yaw), cx=Math.cos(pitch), sx=Math.sin(pitch);
+  const a=[cy*v[0]-sy*v[2], v[1], sy*v[0]+cy*v[2]];
+  return [a[0], cx*a[1]+sx*a[2], -sx*a[1]+cx*a[2]];
+}
+function rotOut(v){                    /* 本地 → 世界 */
+  const cy=Math.cos(yaw), sy=Math.sin(yaw), cx=Math.cos(pitch), sx=Math.sin(pitch);
+  const a=[v[0], cx*v[1]-sx*v[2], sx*v[1]+cx*v[2]];
+  return [cy*a[0]+sy*a[2], a[1], -sy*a[0]+cy*a[2]];
+}
+function screenToPaper(mx,my){
+  const c=cam();
+  const x=(mx/cv.clientWidth)*2-1, y=1-(my/cv.clientHeight)*2;
+  const O=rotIn([0-panX, 0-panY, c.dist]);
+  const D=rotIn([x*c.tn*c.asp, y*c.tn, -1]);
+  if(Math.abs(D[2])<1e-6) return null;
+  const t=-O[2]/D[2];
+  if(t<0) return null;
+  return [O[0]+t*D[0], O[1]+t*D[1]];
+}
+function paperToScreen(px,py,pz){
+  const c=cam(), w=rotOut([px,py,pz||0]);
+  w[0]+=panX; w[1]+=panY;
+  const zc=w[2]-c.dist;
+  if(zc>-0.02) return null;
+  return [((w[0]/(c.tn*c.asp))/(-zc)*0.5+0.5)*cv.clientWidth,
+          (0.5-(w[1]/c.tn)/(-zc)*0.5)*cv.clientHeight];
+}
+const hnds = [0,1,2,3].map(()=>{ const d=document.createElement('div'); d.className='hnd';
+  document.getElementById('stage').appendChild(d); return d; });
+const hpos = [null,null,null,null];
+function updateHandles(){
+  const lift = 0.005*P.scale;
+  for(let i=0;i<4;i++){
+    const f=FOLDS[i];
+    const q = f.a ? [f.x,f.y] : foldPtJS(cornerXY(i));
+    const sp = paperToScreen(q[0], q[1], f.a?lift:0);
+    hpos[i]=sp;
+    if(sp){ hnds[i].style.display='block'; hnds[i].style.left=sp[0]+'px'; hnds[i].style.top=sp[1]+'px'; }
+    else hnds[i].style.display='none';
+    hnds[i].classList.toggle('on', !!f.a);
+  }
+}
+function hitHandle(mx,my){
+  let best=-1, bd=17;
+  for(let i=0;i<4;i++){ const sp=hpos[i]; if(!sp) continue;
+    const d=Math.hypot(sp[0]-mx, sp[1]-my); if(d<bd){ bd=d; best=i; } }
+  return best;
+}
+function setFold(i,mx,my){
+  const t=screenToPaper(mx,my); if(!t) return;
+  const C=cornerXY(i), s=paperSize();
+  const far=Math.hypot(t[0]-C[0], t[1]-C[1]) > Math.max(s[0],s[1])*0.045;
+  FOLDS[i].x=t[0]; FOLDS[i].y=t[1]; FOLDS[i].a = far?1:0;
+}
+
+/* ---------- 滑鼠 ---------- */
+let drag=0, dragC=-1, lx=0, ly=0;
+const mpos = e => { const r=cv.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
+cv.addEventListener('pointerdown', e=>{
+  const m=mpos(e), hit=(e.button===0 && !e.shiftKey) ? hitHandle(m[0],m[1]) : -1;
+  if(hit>=0){ drag=3; dragC=hit; setFold(hit,m[0],m[1]); }
+  else drag = (e.button===2 || e.shiftKey) ? 2 : 1;
+  lx=e.clientX; ly=e.clientY; cv.setPointerCapture(e.pointerId); cv.classList.add('drag');
+});
+cv.addEventListener('pointermove', e=>{
+  const m=mpos(e);
+  if(!drag){ const h=hitHandle(m[0],m[1]);
+    hnds.forEach((d,i)=>d.classList.toggle('hot', i===h));
+    cv.style.cursor = h>=0 ? 'grab' : ''; return; }
+  if(drag===3){ setFold(dragC,m[0],m[1]); return; }
+  const dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY;
+  if(drag===1){ yaw += dx*0.006; pitch += dy*0.006;
+    pitch=Math.max(-1.3,Math.min(1.3,pitch)); yaw=Math.max(-1.4,Math.min(1.4,yaw)); }
+  else { panX += dx*0.0032; panY -= dy*0.0032; }
+});
+const stop = e=>{ if(drag===3) pushHist(); drag=0; dragC=-1; cv.classList.remove('drag'); cv.style.cursor=''; };
+cv.addEventListener('pointerup', stop);
+cv.addEventListener('pointercancel', stop);
+cv.addEventListener('contextmenu', e=>e.preventDefault());
+cv.addEventListener('wheel', e=>{
+  e.preventDefault();
+  P.zoom = Math.max(0.45, Math.min(3.0, P.zoom * (e.deltaY>0 ? 0.92 : 1.087)));
+}, {passive:false});
+cv.addEventListener('dblclick', e=>{
+  const m=mpos(e), h=hitHandle(m[0],m[1]);
+  if(h>=0){ FOLDS[h].a=0; pushHist(); toast('這個角攤平了'); return; }
+  yaw=-0.30; pitch=0.16; panX=panY=0; P.zoom=1;
+});
+
+/* ---------- 拖檔進來 ---------- */
+function loadFile(f){
+  if(!f || !/^image\//.test(f.type)) return;
+  const r=new FileReader();
+  r.onload = () => { const im=new Image();
+    im.onload=()=>{ useImg(im, '目前：'+f.name); pushHist(); toast('海報圖換好了'); };
+    im.src=r.result; };
+  r.readAsDataURL(f);
+}
+
+/* ---------- 復原 / 重做 ---------- */
+const DEF_IMG = defaultPoster();
+let curImg = DEF_IMG, curName = '目前：內建示範海報';
+function useImg(img, name){
+  curImg=img; curName=name; setTex(img);
+  const el=document.getElementById('fname'); if(el) el.textContent=name;
+}
+const HIST=[]; let hIdx=-1, applying=false;
+function snap(){
+  const q={}; for(const k in P) if(k!=='zoom') q[k]=P[k];
+  return {p:q, f:FOLDS.map(f=>({x:f.x,y:f.y,a:f.a})), img:curImg, name:curName};
+}
+function same(a,b){
+  return !!a && !!b && a.img===b.img && a.name===b.name &&
+         JSON.stringify(a.p)===JSON.stringify(b.p) &&
+         JSON.stringify(a.f)===JSON.stringify(b.f);
+}
+function pushHist(){
+  if(applying) return;
+  const s0=snap();
+  if(same(HIST[hIdx], s0)) return;
+  HIST.splice(hIdx+1);
+  HIST.push(s0);
+  if(HIST.length>60) HIST.shift();
+  hIdx=HIST.length-1;
+  histBtns();
+}
+function applySnap(st){
+  applying=true;
+  const oq=P.quality, orr=P.ratio, oo=P.orient, oi=P.imgRatio;
+  for(const k in st.p) P[k]=st.p[k];
+  st.f.forEach((f,i)=>{ FOLDS[i].x=f.x; FOLDS[i].y=f.y; FOLDS[i].a=f.a; });
+  if(st.img!==curImg) useImg(st.img, st.name);
+  else { curName=st.name; const el=document.getElementById('fname'); if(el) el.textContent=st.name; }
+  REFRESH.forEach(f=>f());
+  if(P.quality!==oq || P.ratio!==orr || P.orient!==oo || P.imgRatio!==oi) buildMesh();
+  applying=false;
+  histBtns();
+}
+function histBtns(){
+  const u=document.getElementById('bUndo'), r=document.getElementById('bRedo');
+  if(u) u.disabled = hIdx<=0;
+  if(r) r.disabled = hIdx>=HIST.length-1;
+}
+function undo(){ if(hIdx>0){ hIdx--; applySnap(HIST[hIdx]); toast('復原'); } }
+function redo(){ if(hIdx<HIST.length-1){ hIdx++; applySnap(HIST[hIdx]); toast('重做'); } }
+window.addEventListener('keydown', e=>{
+  if(!(e.ctrlKey||e.metaKey)) return;
+  const k=e.key.toLowerCase();
+  if(k==='z' && !e.shiftKey){ e.preventDefault(); undo(); }
+  else if((k==='z' && e.shiftKey) || k==='y'){ e.preventDefault(); redo(); }
+});
+window.addEventListener('dragover', e=>e.preventDefault());
+window.addEventListener('drop', e=>{ e.preventDefault(); loadFile(e.dataTransfer.files[0]); });
+
+/* ---------- 開跑 ---------- */
+buildPanel();
+ctrls.insertAdjacentHTML('beforeend',
+  '<div id="credit"><span class="cl">紙海報工作室 · 本機運算，圖不上傳</span>' +
+  '<a href="https://www.instagram.com/blahbay____" target="_blank" rel="noopener noreferrer">𝘽🜁𝙔𝘽🜁𝙔 ⊹ @blahbay____</a></div>');
+document.getElementById('fileIn').addEventListener('change', e=>loadFile(e.target.files[0]));
+document.getElementById('bUndo').onclick = undo;
+document.getElementById('bRedo').onclick = redo;
+buildMesh();
+useImg(DEF_IMG, curName);
+pushHist();
+window.addEventListener('resize', resize);
+resize();
+(function loop(now){ resize(); render(now, false); updateHandles(); requestAnimationFrame(loop); })(performance.now());
+</script>
+</body>
+</html>
