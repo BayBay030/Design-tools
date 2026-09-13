@@ -21,6 +21,7 @@ Bay 的線上工具站（對外網站）。**這份是新增 / 修改工具的�
 | 卡片空白模板 | `assets/card-空白模板.png`、`assets/svg/card-空白模板*.svg` | 做新卡片的底 |
 | 卡片壓縮腳本 | `tools/optimize-card.py` | 換完卡片圖跑一次 |
 | 各工具 | `<工具資料夾>/index.html` | 一個資料夾一個工具 |
+| 浮動斗內（Ko-fi） | `index.html` 最底下 + `style.css` 最後一段 | **預設收起**，右下角一顆兩行的按鈕：第一行 **Ko-fi 官方 logo＋英文「Ko-fi」**、第二行「斗內支持」（logo 直接連 `storage.ko-fi.com/cdn/brandasset/v2/kofi_symbol.png`，這是 Ko-fi 提供給人嵌入用的官方圖，不要自己畫別人的商標；圖掛了會自動拿掉只剩文字）。按鈕黃底，會輕輕往上飄（3.4 秒一輪、最高 7px，**只往上不往下**，捲到頁尾才不會壓到；底下的影子留在原地跟著縮放變淡；滑過去或鍵盤聚焦時暫停；系統開「減少動態」就完全不飄）。飄動用 CSS 的 `translate` 屬性，**不要改成 `transform`**，會蓋掉 hover 往上抬的效果。點開是原尺寸 2/3 的視窗（Ko-fi 照原尺寸載入再整塊縮小，大小只改 `--kofi-scale`），金額是美金，**打開才載入 Ko-fi**；× 或 Esc 收起。手機點開是原尺寸全寬。預設狀態由 CSS 決定，**不要改回用 JS 在開頁時判斷**（背景分頁載入會量到寬度 0 而卡住）。捲到頁尾往上抬、載完／回上一頁（`pageshow`）重算位置都是直接算的，**不要包 `requestAnimationFrame`**（頁面沒在畫時會暫停）。2026-09-13 試過「預設展開＋半尺寸」，Bay 覺得沒比較好，改回收起 —— 別再提預設展開 |
 | 更新紀錄 | `CHANGELOG.md` | 每次改版本號就順手寫一筆 |
 | 建置產物 | `dist/` | 已 gitignore，不進版控 |
 
@@ -98,6 +99,33 @@ paperPoster: path.resolve(__dirname, 'paper-poster/index.html'),
 
 **真的做不出來就先把 `assets/card-空白模板.png` 複製成 `public/card-<名字>.png` 佔位**，路徑先接好讓首頁不會破圖，然後跟 Bay 說這張要手改。
 
+**5b. Hover 預覽（選配，但很建議做）**
+
+滑鼠移到卡片上時淡入一張「實際成品」。黃卡好認但看不出工具做出來長怎樣，這張補上那個缺口。
+
+做法：在 `main.js` 那筆多加一行 `hoverImage`，機制就自己接上（沒填就沒有這層，不會壞）：
+
+```js
+image: '/card-holo.png',
+hoverImage: '/card-holo-hover.jpg',
+```
+
+- 尺寸一樣 **512×512**
+- **這張用 JPEG 不是 PNG**。成品圖多半是照片性質（漸層、雜訊、光影），色盤 PNG 會出現色階斷層；
+  而且它鋪滿整張不需要透明背景。品質 0.86~0.88，一張約 30~40KB
+  （黃卡本身仍然是色盤 PNG —— 那是扁平色塊，兩者不要搞混）
+- **內容要是工具真的算出來的東西，不要畫示意圖**。做法是把工具跑起來、用它自己的輸出：
+  `paper-poster` 直接把 canvas 設成 512 再 `toDataURL`；
+  `holo-effect` 是攔截它自己的「下載 PNG」拿到 blob，再合成到格線紙底上
+- 卡片是正方形（`object-fit: cover`），所以預覽也要正方形，不然會被裁
+- **格式看內容選**：照片性質（漸層光影）用 JPEG 0.86~0.88；輸出本身就是有限色的（像素／點陣、扁平圖樣）改用色盤 PNG 再跑 `tools/optimize-card.py` —— 像素轉換器那張這樣做是 66KB → 5KB 而且**色差 0**
+- 怎麼把工具的輸出撈出來（實測有效的順序）：
+  1. 輸出是 canvas → 直接 `drawImage` 那個 canvas。WebGL 的先驗 `toDataURL` 讀不讀得到（沒開 preserveDrawingBuffer 會是空的）
+  2. 輸出是 `<img>` → 找 `alt` 認得出來的那張（例如像素工具的 `Processed Glitch Output`）
+  3. 只有下載按鈕 → 攔 `HTMLAnchorElement.prototype.click` 拿 blob URL（`holo-effect` 這樣做成功）
+  4. 上面都不行 → 用它畫面上已經在顯示的元素自己合成（IG 排版就是讀那 9 張再排成 3×3）
+- 餵輸入圖不用手動點：用 canvas 合成 → `new File([blob])` → `DataTransfer` 塞進 `input.files` → 發 `change` 事件
+
 **6. 加首頁卡片** — `main.js` 的 `widgets` 陣列，插在 `coming-soon` 那筆**前面**：
 
 ```js
@@ -111,6 +139,7 @@ paperPoster: path.resolve(__dirname, 'paper-poster/index.html'),
 ```
 
 外連工具（不在本站）多加 `external: true`，`path` 放完整網址。
+**外連工具只做第 5 步（黃卡）和第 6 步（卡片）**，1～4 步（資料夾、回首頁、credit、vite 入口）都不適用 —— 那些是它自己網站的事。
 
 **7. 驗證** — 見下面的驗收清單。
 
@@ -152,7 +181,8 @@ paperPoster: path.resolve(__dirname, 'paper-poster/index.html'),
 2. `dist/<工具名>/index.html` 有產出，且內容完整（純 HTML 工具要確認 inline script 沒被吃掉）
 3. `dist/card-<名字>.png` 有被複製過去
 4. 起一個靜態伺服器指到 `dist/`，首頁看得到新卡片**而且圖有載出來**
-5. 新卡片跟旁邊幾張並排看一眼 — 黃底、糖果、粉字、粉筆線四樣都對得上，而且檔案 ≤ 25KB
+5. 新卡片跟旁邊幾張並排看一眼 — 黃底、糖果、粉字、粉筆線四樣都對得上，而且檔案 ≤ 25KB；
+   有做 hover 預覽的話，滑上去確認會淡入（別在同一批操作裡插截圖，滑鼠會被帶走，會誤判成沒生效）
 6. 從首頁點進工具 → 按回首頁 → 回得來。這個來回一定要親手點過，並確認那顆按鈕不會突兀
 
 ## 現有工具一覽
@@ -170,6 +200,7 @@ paperPoster: path.resolve(__dirname, 'paper-poster/index.html'),
 | `paper-poster` | 紙海報摺痕模擬器 | 純 HTML |
 | `holo-effect` | 閃卡炫光材質產生器 | 純 HTML（外部 holo.css / holo.js） |
 | — | 作品身分證 Art Work ID | 外連 |
+| — | 語音跑馬燈 InstaWords | 外連（instawords.vercel.app，原始碼在 `C:\Bay\Claude語音跑馬燈`） |
 
 `paper-poster` 在 `D:\創世神 World!\paper-poster\` 還有一份舊的獨立版本 —
 **以本站這份為主**，功能要改就改這裡，那份只當備份。

@@ -7,6 +7,7 @@ const widgets = [
         title: 'DIY 圖樣生成器',
         description: '上傳 PNG 圖片，快速生成各種可愛的背景圖樣與無縫圖樣Pattern素材。',
         image: '/card-pattern.png',
+        hoverImage: '/card-pattern-hover.png',
         path: './diy-pattern-generator/index.html',
     },
     {
@@ -21,6 +22,7 @@ const widgets = [
         title: '圖片拼圖 多併一小幫手',
         description: '圖片拼接小幫手，輕鬆整理多張變一大張的JPG。',
         image: '/card-collage.png',
+        hoverImage: '/card-collage-hover.jpg',
         path: './collage-studio/index.html',
     },
     {
@@ -36,6 +38,7 @@ const widgets = [
         title: 'IG 預覽排版小幫手',
         description: '規劃與預覽你的 Instagram 貼文排版。',
         image: '/card-ig.png',
+        hoverImage: '/card-ig-hover.jpg',
         icon: '📱',
         path: './instalayout-planner/index.html',
     },
@@ -66,6 +69,7 @@ const widgets = [
         title: '90s 復古像素轉換器',
         description: '把照片變成 90 年代電腦點陣風格，可調抖動網點、色深壓縮、故障特效與復古調色盤。',
         image: '/card-pixel.png',
+        hoverImage: '/card-pixel-hover.png',
         path: './90s-retro-pixel-studio/index.html',
     },
     {
@@ -73,6 +77,7 @@ const widgets = [
         title: '紙海報摺痕模擬器',
         description: '把作品圖變成有摺痕、皺褶、折角的紙本海報，紙質與燈光都能調，可拖四角折起來，一鍵存 PNG。',
         image: '/card-paper.png',
+        hoverImage: '/card-paper-hover.jpg',
         path: './paper-poster/index.html',
     },
     {
@@ -80,7 +85,16 @@ const widgets = [
         title: '閃卡炫光材質產生器',
         description: '把任何圖片變成會跟著滑鼠轉的全息閃卡：方閃、碎閃、經典彩虹三種材質，可輸出 PNG 或複製 CSS 直接用在自己的專案。',
         image: '/card-holo.png',
+        hoverImage: '/card-holo-hover.jpg',
         path: './holo-effect/index.html',
+    },
+    {
+        id: 'instawords',
+        title: '語音跑馬燈 InstaWords',
+        description: '講話或錄音，語音 AI 在你手機裡直接轉成字，變成大字跑馬燈看板。第一次要下載約 230MB 的模型，之後沒網路也能用。',
+        image: '/card-instawords.png',
+        path: 'https://instawords.vercel.app/',
+        external: true,
     },
     {
         id: 'coming-soon',
@@ -106,7 +120,13 @@ function createCard(widget) {
     // Image or placeholder
     let mediaHTML;
     if (widget.image) {
-        mediaHTML = `<img class="tool-card-img" src="${widget.image}" alt="${widget.title}" loading="lazy">`;
+        // hoverImage 有填才會有「滑過去看成品」的那一層
+        const hover = widget.hoverImage
+            ? `<img class="tool-card-img tool-card-img--hover" src="${widget.hoverImage}" alt="" aria-hidden="true" loading="lazy">`
+            : '';
+        mediaHTML = `<div class="tool-card-media">
+            <img class="tool-card-img" src="${widget.image}" alt="${widget.title}" loading="lazy">${hover}
+        </div>`;
     } else {
         mediaHTML = `<div class="tool-card-img-placeholder">${widget.icon || '🔧'}</div>`;
     }

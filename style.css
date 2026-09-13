@@ -111,6 +111,30 @@ body {
     background: var(--bg);
 }
 
+/* Hover 預覽：滑過去淡入實際成品 */
+.tool-card-media {
+    position: relative;
+    line-height: 0;
+}
+
+.tool-card-img--hover {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+}
+
+.tool-card:hover .tool-card-img--hover,
+.tool-card:focus-visible .tool-card-img--hover {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tool-card-img--hover { transition: none; }
+}
+
 /* Placeholder card (no image yet) */
 .tool-card-img-placeholder {
     width: 100%;
@@ -298,4 +322,231 @@ body {
         align-items: flex-start;
         padding: 28px 24px;
     }
+}
+
+/* ──────────────────────────────────────
+   斗內（Ko-fi）浮動按鈕：預設收起，點開是原尺寸 2/3 的視窗
+────────────────────────────────────── */
+.kofi {
+    /* 視窗大小只改這個數字：0.667 = 原尺寸的 2/3 */
+    --kofi-scale: 0.667;
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+/* 預設收起：平常只看到這顆按鈕 */
+.kofi-btn {
+    display: inline-flex;
+    position: relative;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 9px 16px 10px;
+    background: var(--card-border);
+    color: var(--text-primary);
+    border: 2px solid #f2c21b;
+    border-radius: var(--card-radius);
+    font: 700 0.9rem/1 var(--font-main);
+    cursor: pointer;
+    box-shadow: 0 10px 26px rgba(214, 150, 0, 0.26);
+    transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+        box-shadow 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+        border-color 0.3s;
+    /* 輕輕往上飄（只往上不往下，捲到頁尾才不會壓到頁尾）。
+       用 translate 屬性不用 transform，才不會蓋掉 hover 往上抬的效果 */
+    animation: kofi-float 3.4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+
+/* 地上那團影子：按鈕飄高時縮小變淡，而且留在原地不跟著飄 */
+.kofi-btn::after {
+    content: "";
+    position: absolute;
+    left: 18%;
+    right: 18%;
+    bottom: -13px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(150, 105, 0, 0.3);
+    filter: blur(4px);
+    z-index: -1;
+    pointer-events: none;
+    animation: kofi-float-shadow 3.4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+
+@keyframes kofi-float {
+    0%, 100% { translate: 0 0; }
+    50%      { translate: 0 -7px; }
+}
+
+@keyframes kofi-float-shadow {
+    0%, 100% { translate: 0 0;   scale: 1;   opacity: 0.85; }
+    50%      { translate: 0 7px; scale: 0.8; opacity: 0.5; }
+}
+
+/* 滑過去或鍵盤聚焦時先停下來，要點的時候目標不會一直動 */
+.kofi-btn:hover,
+.kofi-btn:focus-visible,
+.kofi-btn:hover::after,
+.kofi-btn:focus-visible::after {
+    animation-play-state: paused;
+}
+
+/* 按鈕打開、× / Esc 收起之後，以手動的狀態為準 */
+.kofi.is-closed .kofi-panel { display: none; }
+.kofi.is-closed .kofi-btn { display: inline-flex; }
+.kofi.is-open .kofi-panel { display: block; }
+.kofi.is-open .kofi-btn { display: none; }
+
+.kofi-btn:hover {
+    transform: translateY(-3px);
+    border-color: #f5a6b3;
+    box-shadow: 0 16px 34px rgba(214, 150, 0, 0.32);
+}
+
+/* Ko-fi 官方 logo（第三方的感覺） */
+.kofi-btn img {
+    width: auto;
+    height: 20px;
+    flex: none;
+    display: block;
+}
+
+/* 按鈕兩行：第一行 Ko-fi logo + 英文名，第二行中文 */
+.kofi-btn-brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.kofi-btn-name {
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    color: #2f2a31;
+}
+
+.kofi-btn-sub {
+    font-size: 0.78rem;
+    line-height: 1;
+    color: #5b4a56;
+}
+
+.kofi-panel {
+    display: none;
+    width: calc(380px * var(--kofi-scale));
+    background: var(--card-bg);
+    border: 2px solid var(--card-border);
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(115, 97, 109, 0.2);
+    overflow: hidden;
+    transform-origin: bottom right;
+    animation: kofi-in 0.32s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes kofi-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.97); }
+    to   { opacity: 1; transform: none; }
+}
+
+.kofi-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 9px 9px 12px;
+    border-bottom: 1px solid #f1e9f5;
+}
+
+.kofi-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--text-primary);
+}
+
+.kofi-note {
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    color: var(--text-secondary);
+}
+
+.kofi-usd {
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #d9f3fb;
+    color: #1f86a8;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.kofi-close {
+    width: 26px;
+    height: 26px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.kofi-close:hover {
+    background: #ffe7f0;
+}
+
+.kofi-close svg {
+    width: 13px;
+    height: 13px;
+}
+
+/* Ko-fi 本體照原尺寸載入再整塊縮小，表單排版才不會被擠壞 */
+.kofi-frame-wrap {
+    width: calc(380px * var(--kofi-scale));
+    height: calc(620px * var(--kofi-scale));
+    overflow: hidden;
+    background: #f9f9f9;
+}
+
+.kofi-frame {
+    display: block;
+    width: 380px;
+    height: 620px;
+    border: none;
+    transform: scale(var(--kofi-scale));
+    transform-origin: 0 0;
+}
+
+/* 手機：點開就用原尺寸全寬，字才看得清楚 */
+@media (max-width: 560px) {
+    .kofi { right: 12px; bottom: 12px; left: 12px; }
+    .kofi-panel { width: 100%; border-radius: var(--card-radius); }
+    .kofi-head { padding: 12px 12px 10px 16px; gap: 12px; }
+    .kofi-title { font-size: 0.95rem; }
+    .kofi-note { font-size: 0.78rem; gap: 6px; }
+    .kofi-usd { font-size: 0.68rem; padding: 2px 7px; }
+    .kofi-close { width: 32px; height: 32px; }
+    .kofi-close svg { width: 16px; height: 16px; }
+    .kofi-frame-wrap { width: 100%; height: min(620px, calc(100vh - 170px)); }
+    .kofi-frame { width: 100%; height: 100%; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kofi-panel { animation: none; }
+    /* 系統開了「減少動態」就完全不飄 */
+    .kofi-btn,
+    .kofi-btn::after { transition: none; animation: none; }
 }

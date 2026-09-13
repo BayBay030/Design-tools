@@ -47,7 +47,7 @@
 
         </div>
         <div class="footer-author">
-            <div class="footer-meta">V3.5</div>
+            <div class="footer-meta">V3.7</div>
             <a href="https://www.instagram.com/blahbay____" target="_blank" rel="noopener noreferrer" class="footer-ig">
                 <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -67,6 +67,92 @@
             </a>
         </div>
     </footer>
+
+    <!-- ── 斗內（Ko-fi）浮動按鈕：預設收起，點開是視窗 ──────── -->
+    <div class="kofi" id="kofi">
+        <div class="kofi-panel" id="kofiPanel" role="dialog" aria-label="斗內支持 BayBay">
+            <div class="kofi-head">
+                <div>
+                    <p class="kofi-title">斗內支持 BayBay</p>
+                    <p class="kofi-note"><span class="kofi-usd">USD</span>金額以美金計價</p>
+                </div>
+                <button type="button" class="kofi-close" id="kofiClose" aria-label="收起斗內視窗">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="kofi-frame-wrap">
+                <iframe class="kofi-frame" id="kofiFrame" title="Ko-fi 斗內 BayBay"
+                    data-src="https://ko-fi.com/baybay030/?hidefeed=true&amp;widget=true&amp;embed=true&amp;preview=true"></iframe>
+            </div>
+        </div>
+        <button type="button" class="kofi-btn" id="kofiBtn" aria-expanded="false" aria-controls="kofiPanel">
+            <span class="kofi-btn-brand">
+                <img src="https://storage.ko-fi.com/cdn/brandasset/v2/kofi_symbol.png" alt=""
+                    width="25" height="20" decoding="async" onerror="this.remove()">
+                <span class="kofi-btn-name">Ko-fi</span>
+            </span>
+            <span class="kofi-btn-sub">斗內支持</span>
+        </button>
+    </div>
+    <script>
+        (function () {
+            var root = document.getElementById('kofi');
+            var btn = document.getElementById('kofiBtn');
+            var panel = document.getElementById('kofiPanel');
+            var frame = document.getElementById('kofiFrame');
+            var closeBtn = document.getElementById('kofiClose');
+            var footer = document.querySelector('.site-footer');
+            if (!root || !btn || !panel || !frame || !closeBtn) return;
+
+            // 預設收起（CSS 決定），這裡處理按鈕打開、× / Esc 收起
+            function panelShown() { return getComputedStyle(panel).display !== 'none'; }
+            function loadFrame() {
+                if (panelShown() && !frame.getAttribute('src')) frame.setAttribute('src', frame.dataset.src);
+            }
+
+            // 捲到頁尾時整塊往上抬，不蓋住頁尾的 IG / email
+            // （直接算，不包 requestAnimationFrame：頁面沒在畫的時候它會暫停，實測會卡住不抬）
+            function lift() {
+                btn.setAttribute('aria-expanded', panelShown() ? 'true' : 'false');
+                if (!footer) return;
+                var shown = window.innerHeight - footer.getBoundingClientRect().top;
+                if (shown <= 0) { root.style.bottom = ''; return; }
+                var base = window.innerWidth <= 560 ? 12 : 22;
+                var room = window.innerHeight - root.offsetHeight - 8;
+                root.style.bottom = Math.max(0, Math.min(Math.max(base, shown + 16), room)) + 'px';
+            }
+            function refresh() { lift(); loadFrame(); }
+
+            btn.addEventListener('click', function () {
+                root.classList.remove('is-closed');
+                root.classList.add('is-open');
+                loadFrame();
+                lift();
+            });
+            closeBtn.addEventListener('click', function () {
+                root.classList.remove('is-open');
+                root.classList.add('is-closed');
+                lift();
+                btn.focus();
+            });
+
+            // Ko-fi 只在視窗打開時才載入，平常逛首頁不會多連一個外部網站；
+            // 載完時也重算一次位置（回上一頁時瀏覽器會捲回原位，不一定會發出捲動事件）
+            if (document.readyState === 'complete') refresh();
+            else window.addEventListener('load', refresh);
+            window.addEventListener('pageshow', refresh);
+            window.addEventListener('scroll', lift, { passive: true });
+            window.addEventListener('resize', refresh);
+            document.addEventListener('visibilitychange', refresh);
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && panelShown()) closeBtn.click();
+            });
+            lift();
+        })();
+    </script>
 
     <script type="module" src="main.js"></script>
 </body>

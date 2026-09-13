@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 title Design Tools - Dev Server
 cd /d "%~dp0"
 
