@@ -458,15 +458,20 @@
      暗芯 / 溝紋 / 放射要同步，不然芯會跑出圓心。
 
      色彩分區那層的乘數必須 ≤ 1，位置才會鎖在 0%~100% 之間。
-     超過 1 的話圖會被推出邊界露出空隙（no-repeat 之後就是破洞）。 */
+     超過 1 的話圖會被推出邊界露出空隙（no-repeat 之後就是破洞）。
+
+     ⚠️ 暗芯 / 溝紋 / 放射這三層的乘數要跟「格線」和「銀塊的十字遮罩」一樣是 0.05。
+        銀塊的十字鎖在格心，放射的圓心也在格心 —— 乘數一不一樣，兩邊就會隨著指標
+        互相錯開，看起來像風車浮在銀塊上面（多出一層假的深度）。
+        要的是：兩塊銀塊交界的那個頂點，永遠就是風車圓心。 */
   background-position:
     calc(50% + var(--shift-x) * -0.92) calc(50% + var(--shift-y) * -0.92),
     calc(var(--shift-x) * 0.05) calc(var(--shift-y) * 0.05),
     calc(var(--shift-x) * 0.05) calc(var(--shift-y) * 0.05),
     calc(var(--shift-x) * 0.09) calc(var(--shift-y) * 0.09),
-    calc(var(--shift-x) * 0.14) calc(var(--shift-y) * 0.14),
-    calc(var(--shift-x) * 0.14) calc(var(--shift-y) * 0.14),
-    calc(var(--shift-x) * 0.14) calc(var(--shift-y) * 0.14);
+    calc(var(--shift-x) * 0.05) calc(var(--shift-y) * 0.05),
+    calc(var(--shift-x) * 0.05) calc(var(--shift-y) * 0.05),
+    calc(var(--shift-x) * 0.05) calc(var(--shift-y) * 0.05);
 
   /* 這行是方閃的靈魂：滑動時整片色相掃過去。
      ⚠️ contrast 要乘 --soften 壓低：對比開太高會把平滑的光譜壓成一塊一塊的純色，

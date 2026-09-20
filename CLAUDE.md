@@ -2,6 +2,10 @@
 
 Bay 的線上工具站（對外網站）。**這份是新增 / 修改工具的唯一依據，動工前先讀完。**
 
+**正式網址：https://bay-design-tools.vercel.app/**（Vercel，推到 GitHub `main` 就自動部署）。推完要驗「線上檔名有沒有換」就對這個網址驗。
+
+⚠️ 別拿錯網址驗：GitHub repo 首頁欄位寫的 `design-tools-ten.vercel.app` 已失效（404）、`design-tools.vercel.app` 是別人的站、Vercel 自動產生的長網址要登入、GitHub Pages 那份跑的是沒建置的原始碼（卡片圖全部 404）—— 這些都不是正式站。
+
 ## 這站是什麼
 
 - Vite **多頁式**網站：首頁一頁，每個小工具各自一頁，彼此獨立不共用狀態

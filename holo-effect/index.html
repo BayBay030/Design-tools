@@ -47,7 +47,7 @@
   .stage {
     display: grid;
     place-items: center;
-    padding: 40px 24px 70px;
+    padding: 70px 24px 70px;   /* 上面留給左上那疊標題，卡片放到最大也不會被壓到 */
     position: relative;
   }
   .stage__hint {
@@ -60,6 +60,14 @@
   .stage.is-drop { outline: var(--px) dashed var(--ink); outline-offset: -16px; }
   .stage__slot { display: grid; place-items: center; }
 
+  /* 左上角那疊：標題視窗在上，回首頁在它下面 */
+  .stage__head {
+    position: absolute; left: 24px; top: 22px; z-index: 20;
+    width: 300px; max-width: calc(100% - 48px);
+    display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  }
+  .win--title { width: 100%; margin-bottom: 0; }
+
   /* ---------- 卡面 ---------- */
 
   .face {
@@ -68,9 +76,28 @@
     position: relative;
     overflow: hidden;
   }
+  /* 上傳的圖：縮放 / 位置 / 邊距 / 顯示方式，全部吃 --img-* 變數（滑桿在右邊「圖片」面板）
+     邊距做在容器的 padding 上（不是 img 的 margin），圖才會連同 object-fit 一起重新算，
+     露出來的那圈是卡面本來的底色。*/
+  .foil {
+    --img-zoom: 1;  --img-x: 50%;  --img-y: 50%;  --img-pad: 0%;  --img-fit: contain;
+    --over-zoom: 1; --over-x: 50%; --over-y: 50%; --over-pad: 0%; --over-fit: contain;
+  }
+  .face--plain, .tmpl__win { padding: var(--img-pad); }
+  /* 白墨底那層：同一套做法，但吃自己的變數（holo.css 也有 .foil__over img，
+     這份 style 在 <link> 後面，同分時後面的贏，所以這裡蓋得過去）*/
+  .foil__over { padding: var(--over-pad); }
+  .foil__over img {
+    object-fit: var(--over-fit);
+    object-position: var(--over-x) var(--over-y);
+    transform: scale(var(--over-zoom));
+  }
   .face > img, .tmpl__win > img {
     display: block; width: 100%; height: 100%;
-    object-fit: cover; aspect-ratio: auto;
+    object-fit: var(--img-fit);
+    object-position: var(--img-x) var(--img-y);
+    transform: scale(var(--img-zoom));
+    aspect-ratio: auto;
   }
   .face__empty {
     position: absolute; inset: 0; margin: 0;
@@ -175,6 +202,21 @@
 
   .note { font-size: 11px; line-height: 1.6; color: var(--ink-2); margin: 9px 0 0; }
 
+  /* ---------- 收合式設定（預設收起，點標題展開）---------- */
+  .fold { border: 2px solid var(--ink); background: #fff6ea; margin: 10px 0 0; }
+  .fold > summary {
+    list-style: none; cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+    padding: 5px 8px;
+    font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ink);
+  }
+  .fold > summary::-webkit-details-marker { display: none; }
+  .fold > summary svg { width: 12px; height: 12px; flex: none; transition: transform .12s; }
+  .fold[open] > summary svg { transform: rotate(180deg); }
+  .fold > summary:hover { background: var(--yellow); }
+  .fold[open] > summary { background: var(--yellow); border-bottom: 2px solid var(--ink); }
+  .fold__body { padding: 1px 8px 7px; }
+
   /* ---------- 滑桿 ---------- */
 
   .ctl { display: grid; grid-template-columns: 78px 1fr 52px; align-items: center; gap: 8px; margin: 9px 0; }
@@ -237,8 +279,7 @@
   /* ---------- 回小工具大幫手 ---------- */
 
   .backhome {
-    position: absolute; left: 24px; top: 22px; z-index: 20;
-    white-space: nowrap;
+    white-space: nowrap;   /* 位置由上面的 .stage__head 排 */
     display: inline-flex; align-items: center; gap: 7px;
     padding: 7px 13px;
     background: var(--yellow);
@@ -300,6 +341,9 @@
   @media (max-width: 940px) {
     body { grid-template-columns: 1fr; }
     .panel { height: auto; }
+    /* 窄螢幕：左上那疊改成正常排在卡片上面，才不會壓到卡片 */
+    .stage__head { position: static; width: 100%; max-width: 372px; justify-self: start; }
+    .stage { padding-top: 22px; }
   }
 
 </style>
@@ -307,12 +351,28 @@
 <body>
 
 <div class="stage" id="stage">
-  <a class="backhome" href="../index.html">
-    <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
-      <path d="M7 2h2v2H7zM5 4h2v2H5zM3 6h2v2H3zM3 8h2v2H3zM5 10h2v2H5zM7 12h2v2H7zM5 7h9v2H5z"/>
-    </svg>
-    小工具大幫手
-  </a>
+  <div class="stage__head">
+    <section class="win win--title">
+      <div class="win__bar">
+        <span class="head">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
+            <path d="M7 1h2v3H7zM7 12h2v3H7zM1 7h3v2H1zM12 7h3v2h-3zM6 4h4v1H6zM5 5h6v1H5zM4 6h8v4H4zM5 10h6v1H5zM6 11h4v1H6z"/>
+          </svg>
+          HOLO FOIL 調參台
+        </span>
+        <span class="win__dots"><i></i><i></i><i></i></span>
+      </div>
+      <div class="win__body">
+        <p class="sub">Bay (3x3) Studio · 三種閃卡材質 · 全部手刻零依賴</p>
+      </div>
+    </section>
+    <a class="backhome" href="../index.html">
+      <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
+        <path d="M7 2h2v2H7zM5 4h2v2H5zM3 6h2v2H3zM3 8h2v2H3zM5 10h2v2H5zM7 12h2v2H7zM5 7h9v2H5z"/>
+      </svg>
+      小工具大幫手
+    </a>
+  </div>
   <div class="stage__slot">
 
     <div class="foil" id="card" data-foil="grid" data-carrier="a" data-tilt="14">
@@ -349,27 +409,11 @@
     </div>
 
   </div>
-  <p class="stage__hint">滑鼠移到卡片上 · 右邊「圖片 → 選擇圖片」上傳，或直接把圖拖進來</p>
+  <p class="stage__hint">滑鼠移到卡片上 · 右邊「圖片 → 選擇圖片」上傳，或直接把圖拖進來（會放到白墨底）</p>
 </div>
 
 
 <aside class="panel">
-
-
-  <section class="win">
-    <div class="win__bar">
-      <span class="head">
-        <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
-          <path d="M7 1h2v3H7zM7 12h2v3H7zM1 7h3v2H1zM12 7h3v2h-3zM6 4h4v1H6zM5 5h6v1H5zM4 6h8v4H4zM5 10h6v1H5zM6 11h4v1H6z"/>
-        </svg>
-        HOLO FOIL 調參台
-      </span>
-      <span class="win__dots"><i></i><i></i><i></i></span>
-    </div>
-    <div class="win__body">
-      <p class="sub">Bay (3x3) Studio · 三種閃卡材質 · 全部手刻零依賴</p>
-    </div>
-  </section>
 
   <section class="win">
     <div class="win__bar win__bar--pink">
@@ -405,24 +449,59 @@
     </div>
     <div class="win__body">
       <div class="upload">
-        <span class="upload__name">底圖</span>
+        <span class="upload__name">圖檔(白墨底)</span>
         <label class="btn btn--go">
-          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M7 2h2v7H7zM5 4h2v1H5zM9 4h2v1H9zM4 5h2v1H4zM10 5h2v1h-2zM2 11h12v3H2z"/></svg>
-          選擇圖片
-          <input type="file" id="fileMain" accept="image/*">
-        </label>
-        <button type="button" class="btn btn--x" id="clearMain">清除</button>
-      </div>
-      <div class="upload">
-        <span class="upload__name">上層圖</span>
-        <label class="btn">
           <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M7 2h2v7H7zM5 4h2v1H5zM9 4h2v1H9zM4 5h2v1H4zM10 5h2v1h-2zM2 11h12v3H2z"/></svg>
           選擇圖片
           <input type="file" id="fileOver" accept="image/*">
         </label>
         <button type="button" class="btn btn--x" id="clearOver">清除</button>
       </div>
-      <p class="note">上層圖蓋在閃光<b>上面</b>，透明的地方會透出閃光。想做「線稿在最上層、閃光從鏤空處透出來」就放這裡。</p>
+      <details class="fold">
+        <summary><svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 5h10v2H3zM5 7h6v2H5zM7 9h2v2H7z"/></svg>圖片調整</summary>
+        <div class="fold__body">
+      <label class="ctl"><span class="ctl__name">圖片縮放</span><input type="range" data-var="--over-zoom" data-unit=""  min="0.2" max="3"   step="0.01" value="1"><output></output></label>
+      <label class="ctl"><span class="ctl__name">水平位置</span><input type="range" data-var="--over-x"    data-unit="%" min="0"   max="100" step="1"    value="50"><output></output></label>
+      <label class="ctl"><span class="ctl__name">垂直位置</span><input type="range" data-var="--over-y"    data-unit="%" min="0"   max="100" step="1"    value="50"><output></output></label>
+      <label class="ctl"><span class="ctl__name">圖片邊距</span><input type="range" data-var="--over-pad"  data-unit="%" min="0"   max="25"  step="0.5"  value="0"><output></output></label>
+      <div class="ctl" style="grid-template-columns:78px 1fr">
+        <span class="ctl__name">顯示方式</span>
+        <select id="overFit">
+          <option value="cover">填滿裁切</option>
+          <option value="contain" selected>完整顯示（預設，整張塞進去不裁切）</option>
+          <option value="fill">拉滿（不管比例，會變形）</option>
+        </select>
+      </div>
+        </div>
+      </details>
+      <p class="note">白墨底蓋在閃光<b>上面</b>，透明的地方會透出閃光 —— 就是印刷時打白墨的那層：有白墨的地方看得到你的圖，沒打到的地方留著裸露的閃光。想做「線稿在最上層、閃光從鏤空處透出來」就放這裡。</p>
+      <div class="upload">
+        <span class="upload__name">底圖</span>
+        <label class="btn">
+          <svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M7 2h2v7H7zM5 4h2v1H5zM9 4h2v1H9zM4 5h2v1H4zM10 5h2v1h-2zM2 11h12v3H2z"/></svg>
+          選擇圖片
+          <input type="file" id="fileMain" accept="image/*">
+        </label>
+        <button type="button" class="btn btn--x" id="clearMain">清除</button>
+      </div>
+      <details class="fold">
+        <summary><svg viewBox="0 0 16 16" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 5h10v2H3zM5 7h6v2H5zM7 9h2v2H7z"/></svg>圖片調整</summary>
+        <div class="fold__body">
+      <label class="ctl"><span class="ctl__name">圖片縮放</span><input type="range" data-var="--img-zoom" data-unit=""  min="0.2" max="3"   step="0.01" value="1"><output></output></label>
+      <label class="ctl"><span class="ctl__name">水平位置</span><input type="range" data-var="--img-x"    data-unit="%" min="0"   max="100" step="1"    value="50"><output></output></label>
+      <label class="ctl"><span class="ctl__name">垂直位置</span><input type="range" data-var="--img-y"    data-unit="%" min="0"   max="100" step="1"    value="50"><output></output></label>
+      <label class="ctl"><span class="ctl__name">圖片邊距</span><input type="range" data-var="--img-pad"  data-unit="%" min="0"   max="25"  step="0.5"  value="0"><output></output></label>
+      <div class="ctl" style="grid-template-columns:78px 1fr">
+        <span class="ctl__name">顯示方式</span>
+        <select id="imgFit">
+          <option value="cover">填滿裁切</option>
+          <option value="contain" selected>完整顯示（預設，整張塞進去不裁切）</option>
+          <option value="fill">拉滿（不管比例，會變形）</option>
+        </select>
+      </div>
+        </div>
+      </details>
+      <p class="note">底圖墊在閃光<b>下面</b>，通常放材質或背景色。只做白墨底的話可以不放。</p>
     </div>
   </section>
 
@@ -441,7 +520,7 @@
     <div class="win__bar"><span>畫質</span><span class="win__dots"><i></i><i></i><i></i></span></div>
     <div class="win__body">
       <div class="row">
-        <input type="checkbox" id="always">
+        <input type="checkbox" id="always" checked>
         <label for="always">常亮（不用滑到上面也一直閃）</label>
       </div>
       <label class="ctl"><span class="ctl__name">閃光強度</span><input type="range" data-var="--power"      data-unit="" min="0"   max="2"   step="0.01" value="1"><output></output></label>
@@ -497,7 +576,6 @@
       <label class="ctl"><span class="ctl__name">溝紋強度</span><input type="range" data-var="--groove"  data-unit=""    min="0"   max="1"   step="0.01" value="0.3"><output></output></label>
       <label class="ctl"><span class="ctl__name">溝紋間距</span><input type="range" data-var="--ring"    data-unit="px"  min="1"   max="16"  step="0.1"  value="3"><output></output></label>
       <label class="ctl"><span class="ctl__name">斜切對比</span><input type="range" data-var="--bevel"   data-unit=""    min="0"   max="1"   step="0.01" value="0.9"><output></output></label>
-      <label class="ctl"><span class="ctl__name">格線粗細</span><input type="range" data-var="--seam"    data-unit="px"  min="0"   max="4"   step="0.1"  value="1"><output></output></label>
       <label class="ctl"><span class="ctl__name">色相掃幅</span><input type="range" data-var="--sweep"   data-unit="deg" min="0"   max="720" step="5"    value="280"><output></output></label>
     </div>
   </section>
@@ -624,8 +702,19 @@
     card.style.setProperty("--blend", blend.value);
   });
 
+  var imgFit = document.getElementById("imgFit");
+  imgFit.addEventListener("change", function () {
+    card.style.setProperty("--img-fit", imgFit.value);
+  });
+
+  var overFit = document.getElementById("overFit");
+  overFit.addEventListener("change", function () {
+    card.style.setProperty("--over-fit", overFit.value);
+  });
+
   var always = document.getElementById("always");
   always.addEventListener("change", function () { api.setAlways(always.checked); });
+  api.setAlways(always.checked);   // 預設就打勾，開頁直接亮
 
   /* ---------- 載體 A / B / C ---------- */
 
@@ -672,17 +761,22 @@
     r.onload = function () { cb(r.result); };
     r.readAsDataURL(file);
   }
+  // 兩層任一張有圖，卡面的「上傳你的圖」提示就要收起來
+  // （白墨底是主要的那張，而且可能有透明區，提示留著會從鏤空處透出來）
+  function syncHints() {
+    var empty = !artFull.getAttribute("src") && !overArt.getAttribute("src");
+    facePlainHint.hidden = !empty; faceTmplHint.hidden = !empty;
+  }
   function setMain(url) {
     [artFull, artWin].forEach(function (img) { img.src = url; img.hidden = false; });
-    facePlainHint.hidden = true; faceTmplHint.hidden = true;
-    api.sweep(2.5);
+    syncHints(); api.sweep(2.5);
   }
   function clearMain() {
     [artFull, artWin].forEach(function (img) { img.removeAttribute("src"); img.hidden = true; });
-    facePlainHint.hidden = false; faceTmplHint.hidden = false;
+    syncHints();
   }
-  function setOver(url) { overArt.src = url; overArt.hidden = false; api.sweep(2.5); }
-  function clearOver() { overArt.removeAttribute("src"); overArt.hidden = true; }
+  function setOver(url) { overArt.src = url; overArt.hidden = false; syncHints(); api.sweep(2.5); }
+  function clearOver() { overArt.removeAttribute("src"); overArt.hidden = true; syncHints(); }
 
   document.getElementById("fileMain").addEventListener("change", function (e) {
     readImage(e.target.files[0], setMain); e.target.value = "";
@@ -701,7 +795,7 @@
   });
   stage.addEventListener("drop", function (e) {
     e.preventDefault();
-    readImage(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0], setMain);
+    readImage(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0], setOver);
   });
 
   /* ---------- C 的卡片文字 ---------- */
@@ -760,7 +854,9 @@
     sliders.forEach(function (s) { s.value = defaults[s.dataset.var]; apply(s); });
     tilt.value = 14; applyTilt();
     blend.value = "color-dodge"; card.style.setProperty("--blend", "color-dodge");
-    always.checked = false; api.setAlways(false);
+    imgFit.value = "contain"; card.style.setProperty("--img-fit", "contain");
+    overFit.value = "contain"; card.style.setProperty("--over-fit", "contain");
+    always.checked = true; api.setAlways(true);
     OFFSET_VARS.forEach(function (v) { card.style.removeProperty(v); });
     setCarrier(carrier);
   });
